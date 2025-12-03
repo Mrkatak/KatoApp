@@ -1,21 +1,18 @@
-package com.example.katoapp.view.screens
+package com.example.katoapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import com.example.katoapp.ui.theme.AppTheme
+import dagger.hilt.android.AndroidEntryPoint
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         val splashScreen = installSplashScreen()
@@ -33,23 +30,8 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             AppTheme {
-                HomeScreen(modifier = Modifier)
+                Navigation()
             }
-        }
-    }
-}
-
-
-@Composable
-fun AppNavigation() {
-    val navController = rememberNavController()
-
-    NavHost(navController = navController, startDestination = "splash_screen") {
-        composable("splash_screen") {
-            SplashScreen(navController = navController)
-        }
-        composable("home_screen") {
-            HomeScreen(modifier = Modifier) // Ganti dengan screen utama Anda
         }
     }
 }
