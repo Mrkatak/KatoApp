@@ -1,0 +1,41 @@
+package com.example.katoapp
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+
+@Composable
+fun HomeScreen(modifier: Modifier) {
+    Column(modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.background))
+    {
+        Text(
+            text = "Ini Dashboard",
+            style = MaterialTheme.typography.headlineMedium
+        )
+
+        OutlinedTextField(
+            value = "",
+            onValueChange = {},
+            label = {Text("Masukkan Email")},
+            placeholder = {Text("example@gmail.com")},
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = MaterialTheme.colorScheme.secondary,
+                focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                unfocusedTextColor = MaterialTheme.colorScheme.secondary
+            )
+
+
+        )
+    }
+
+
+
+}

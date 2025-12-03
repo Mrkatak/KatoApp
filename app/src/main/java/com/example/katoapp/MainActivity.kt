@@ -4,44 +4,52 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.katoapp.ui.theme.KatoAppTheme
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.katoapp.ui.theme.AppTheme
+
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Opsional: Tahan Splash Screen lebih lama jika sedang memuat data
+        var isKeepSplash = true
+        splashScreen.setKeepOnScreenCondition { isKeepSplash }
+
+        // Simulasi loading data (misal check login status)
+        lifecycleScope.launch {
+            delay(2000) // Tahan selama 2 detik
+            isKeepSplash = false
+        }
         setContent {
-            KatoAppTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
+            AppTheme {
+                HomeScreen(modifier = Modifier)
             }
         }
     }
 }
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
 
-@Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    KatoAppTheme {
-        Greeting("Android")
+fun AppNavigation() {
+    val navController = rememberNavController()
+
+    NavHost(navController = navController, startDestination = "splash_screen") {
+        composable("splash_screen") {
+            SplashScreen(navController = navController)
+        }
+        composable("home_screen") {
+            HomeScreen(modifier = Modifier) // Ganti dengan screen utama Anda
+        }
     }
 }
