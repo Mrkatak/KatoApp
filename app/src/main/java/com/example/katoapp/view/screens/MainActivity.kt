@@ -1,4 +1,4 @@
-package com.example.katoapp
+package com.example.katoapp.view.screens
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

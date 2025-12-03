@@ -1,6 +1,7 @@
-package com.example.katoapp
+package com.example.katoapp.view.screens
 
 import android.view.animation.OvershootInterpolator
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,11 +16,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavController
+import com.example.katoapp.R
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavController) {
-    val scale = remember { androidx.compose.animation.core.Animatable(0f) }
+    val scale = remember { Animatable(0f) }
 
     // Animasi dan Navigasi
     LaunchedEffect(key1 = true) {
