@@ -3,19 +3,17 @@ package com.example.katoapp.view.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavController
-import com.example.katoapp.viewModel.AuthViewModel
 
 @Composable
-fun DashboardUserScreen(
+fun ProfileScreen(
     modifier: Modifier = Modifier,
-    navController: NavController,
-    viewModel: AuthViewModel
+    onLogoutClick: () -> Unit
 ) {
     Column(
         modifier
@@ -23,12 +21,15 @@ fun DashboardUserScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "Selamat Datang di KATO!" ,
-            style = MaterialTheme.typography.headlineLarge
-        )
+        Text(text = "Halaman Profil", style = MaterialTheme.typography.headlineMedium)
 
-
-
+        Button(
+            onClick = {
+                onLogoutClick()
+            }
+        ) {
+            Text("Logout")
+        }
     }
+
 }

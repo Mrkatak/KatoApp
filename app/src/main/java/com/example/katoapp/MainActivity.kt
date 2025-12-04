@@ -28,7 +28,7 @@ class MainActivity : ComponentActivity() {
 
         // Cek sesi Login
         val startScreen = if (viewModel.isUserLoggedIn()) {
-            "DashboardUserScreen"
+            "MainUserScreen"
         } else {
             "LoginScreen"
         }
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
         }
         setContent {
             AppTheme {
-                Navigation(stratDestination = startScreen)
+                Navigation(startDestination = startScreen)
             }
         }
     }
