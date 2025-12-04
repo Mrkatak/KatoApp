@@ -68,7 +68,7 @@ fun RegisterScreen(
         //if success
         if (uiState.registerSuccess) {
             Toast.makeText(context, uiState.successMessage, Toast.LENGTH_SHORT).show()
-            navController.navigate("DashboardUserScreen") {
+            navController.navigate("MainUserScreen") {
                 popUpTo("RegisterScreen") { inclusive = true }
             }
             viewModel.resetState() //reset state
