@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.katoapp" />
+                  <option name="mobileSdkAppId" value="1:15829119706:android:b46c57409079a4635bebe3" />
+                  <option name="projectId" value="kato-bb5b9" />
+                  <option name="projectNumber" value="15829119706" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

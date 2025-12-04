@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "15829119706",
+    "firebase_url": "https://kato-bb5b9-default-rtdb.firebaseio.com",
+    "project_id": "kato-bb5b9",
+    "storage_bucket": "kato-bb5b9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:15829119706:android:b46c57409079a4635bebe3",
+        "android_client_info": {
+          "package_name": "com.example.katoapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACNQjmLQm8KBtwVjnACw_zBAN_C_2a4BA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
