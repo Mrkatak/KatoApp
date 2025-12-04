@@ -19,7 +19,7 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    // Fungsi cek apakah user sudah login (Auto Login)
+    // Fungsi cek apakah user sudah login
     fun isUserLoggedIn(): Boolean {
         return repository.currentUser != null
     }
