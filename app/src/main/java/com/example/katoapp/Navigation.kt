@@ -20,9 +20,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.katoapp.view.screens.DashboardUserScreen
+import com.example.katoapp.view.screens.LoginRoute
 import com.example.katoapp.view.screens.LoginScreen
 import com.example.katoapp.view.screens.ProfileScreen
+import com.example.katoapp.view.screens.RegisterRoute
 import com.example.katoapp.view.screens.RegisterScreen
+import com.example.katoapp.view.screens.ResetPassRoute
 import com.example.katoapp.view.screens.ResetPassScreen
 import com.example.katoapp.view.screens.SavePromptScreen
 import com.example.katoapp.view.screens.SharingPromptScreen
@@ -76,20 +79,26 @@ fun Navigation(
         navController = rootNavController,
         startDestination = startDestination
     ) {
-        composable( "LoginScreen") { LoginScreen(
+        composable( "LoginScreen") {
+            LoginRoute(
                 navController = rootNavController,
                 viewModel = viewModel
-        ) }
+            )
+        }
 
-        composable( "RegisterScreen") { RegisterScreen(
-            navController = rootNavController,
-            viewModel = viewModel
-        ) }
+        composable( "RegisterScreen") {
+            RegisterRoute(
+                navController = rootNavController,
+                viewModel = viewModel
+            )
+        }
 
-        composable("ResetPassScreen") { ResetPassScreen(
-            navController = rootNavController,
-            viewModel = viewModel
-        ) }
+        composable("ResetPassScreen") {
+            ResetPassRoute(
+                navController = rootNavController,
+                viewModel = viewModel
+            )
+        }
 
         // Saat masuk ke Dashboard, kita panggil Screen Container di bawah
         composable("MainUserScreen") {

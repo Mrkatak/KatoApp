@@ -38,19 +38,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.katoapp.R
 import com.example.katoapp.viewModel.AuthViewModel
+import com.example.katoapp.viewModel.state.AuthUiState
+
 
 @Composable
-fun ResetPassScreen(
-    modifier: Modifier = Modifier ,
-    navController: NavController ,
+fun ResetPassRoute(
+    navController: NavController,
     viewModel: AuthViewModel
 ) {
-    var email by remember { mutableStateOf("") }
-
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -69,6 +69,31 @@ fun ResetPassScreen(
             navController.popBackStack()
         }
     }
+
+    ResetPassScreen(
+        uiState = uiState,
+        onResetPassClick = {email ->
+            viewModel.resetPassword(email)
+        },
+        onLoginClick = {
+            viewModel.resetState()
+            navController.navigate("LoginScreen")
+        }
+    )
+
+}
+
+
+@Composable
+fun ResetPassScreen(
+    modifier: Modifier = Modifier ,
+    uiState: AuthUiState,
+    onResetPassClick: (String) -> Unit,
+    onLoginClick: () -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+
+
 
     Box(
         modifier
@@ -101,9 +126,11 @@ fun ResetPassScreen(
 
             Spacer(modifier.height(4.dp))
             Text(
-                text = "Masukkan email Anda, kami akan mengirimkan link untuk mereset password.",
+                text = "Masukkan email Anda,\n" +
+                        " kami akan mengirimkan link untuk mereset password.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
+                textAlign = TextAlign.Center
             )
 
             Spacer(modifier.height(48.dp))
@@ -147,13 +174,13 @@ fun ResetPassScreen(
                 maxLines = 1
             )
 
-            Spacer(modifier.height(16.dp))
+            Spacer(modifier.height(24.dp))
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             } else {
                 Button(
                     onClick = {
-                        viewModel.resetPassword(email)
+                        onResetPassClick(email)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -179,10 +206,7 @@ fun ResetPassScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 TextButton(
-                    onClick = {
-                        viewModel.resetState()
-                        navController.navigate("LoginScreen")
-                    },
+                    onClick = onLoginClick,
                     contentPadding = PaddingValues(4.dp)
                 ) {
                     Text(
@@ -201,4 +225,16 @@ fun ResetPassScreen(
 
 
     }
+}
+
+
+@Preview
+@Composable
+private fun View() {
+    ResetPassScreen(
+        uiState = AuthUiState(),
+        onResetPassClick = {},
+        onLoginClick = {}
+    )
+
 }

@@ -40,21 +40,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.katoapp.R
 import com.example.katoapp.viewModel.AuthViewModel
+import com.example.katoapp.viewModel.state.AuthUiState
+import com.google.rpc.context.AttributeContext
 
 @Composable
-fun RegisterScreen(
-    modifier: Modifier = Modifier,
+fun RegisterRoute(
     navController: NavController,
-    viewModel : AuthViewModel
+    viewModel: AuthViewModel
 ) {
-    var username by remember { mutableStateOf("")}
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("")}
-
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -74,6 +72,36 @@ fun RegisterScreen(
             viewModel.resetState() //reset state
         }
     }
+
+    RegisterScreen(
+        uiState = uiState,
+        onRegisterClick = {username, email, password ->
+            viewModel.register(username, email, password)
+        },
+        onLoginClick = {
+            viewModel.resetState()
+            navController.navigate("LoginScreen")
+        },
+        onGoogleSignInClick = {
+            //logic login dgn google
+        }
+    )
+
+}
+
+
+@Composable
+fun RegisterScreen(
+    modifier: Modifier = Modifier,
+    uiState: AuthUiState,
+    onRegisterClick: (String, String, String) -> Unit,
+    onLoginClick: () -> Unit,
+    onGoogleSignInClick: () -> Unit
+) {
+    var username by remember { mutableStateOf("")}
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("")}
+
 
     Box(
         modifier
@@ -239,7 +267,7 @@ fun RegisterScreen(
             } else {
                 Button(
                     onClick = {
-                        viewModel.register(username, email, password)
+                        onRegisterClick(username, email, password)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -270,10 +298,7 @@ fun RegisterScreen(
                     color = MaterialTheme.colorScheme.outline
                 )
                 TextButton(
-                    onClick = {
-                        viewModel.resetState()
-                        navController.navigate("LoginScreen")
-                    },
+                    onClick = onLoginClick,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
@@ -316,7 +341,7 @@ fun RegisterScreen(
             Spacer(modifier.height(16.dp))
             Button(
                 onClick = {
-                    //login google
+                    onGoogleSignInClick
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -346,9 +371,13 @@ fun RegisterScreen(
 
 }
 
-//@Preview
-//@Composable
-//private fun View() {
-//    val navController = rememberNavController()
-//    RegisterScreen(navController = navController)
-//}
+@Preview
+@Composable
+private fun View() {
+    RegisterScreen(
+        uiState = AuthUiState(),
+        onRegisterClick = {_,_,_ ->},
+        onLoginClick = {},
+        onGoogleSignInClick = {}
+    )
+}

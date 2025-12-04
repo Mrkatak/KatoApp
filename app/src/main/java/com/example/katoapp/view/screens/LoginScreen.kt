@@ -40,20 +40,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.katoapp.R
 import com.example.katoapp.viewModel.AuthViewModel
+import com.example.katoapp.viewModel.state.AuthUiState
 
 @Composable
-fun LoginScreen(
-    modifier: Modifier = Modifier,
+fun LoginRoute(
     navController: NavController,
     viewModel: AuthViewModel
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("")}
-
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
@@ -73,6 +71,41 @@ fun LoginScreen(
             viewModel.resetState() //reset state
         }
     }
+
+    LoginScreen(
+        uiState = uiState,
+        onLoginClick = {email, password ->
+            viewModel.login(email, password)
+        },
+        onResetPassClick = {
+            viewModel.resetState()
+            navController.navigate("ResetPassScreen")
+        },
+        onRegisterClick = {
+            viewModel.resetState()
+            navController.navigate("RegisterScreen")
+        },
+        onGoogleSignInClick = {
+            //logic login dgn google
+        }
+    )
+
+}
+
+
+
+
+@Composable
+fun LoginScreen(
+    modifier: Modifier = Modifier,
+    uiState: AuthUiState,
+    onLoginClick: (String, String) -> Unit,
+    onResetPassClick: () -> Unit,
+    onRegisterClick: () -> Unit,
+    onGoogleSignInClick: () -> Unit
+) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("")}
 
     Box(
         modifier
@@ -198,10 +231,7 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(
-                    onClick = {
-                        viewModel.resetState()
-                        navController.navigate("ResetPassScreen")
-                    }
+                    onClick = onResetPassClick
                 ) {
                     Text(
                         text = "Lupa Password" ,
@@ -218,7 +248,7 @@ fun LoginScreen(
             } else {
                 Button(
                     onClick = {
-                    viewModel.login(email, password)
+                        onLoginClick(email, password)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -249,10 +279,7 @@ fun LoginScreen(
                     color = MaterialTheme.colorScheme.outline
                 )
                 TextButton(
-                    onClick = {
-                        viewModel.resetState()
-                        navController.navigate("RegisterScreen")
-                    },
+                    onClick = onRegisterClick,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
@@ -295,7 +322,7 @@ fun LoginScreen(
             Spacer(modifier.height(16.dp))
             Button(
                 onClick = {
-                    //login google
+                    onGoogleSignInClick
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer
@@ -328,12 +355,18 @@ fun LoginScreen(
 
 
     }
-
 }
 
-//@Preview
-//@Composable
-//private fun View() {
-//    val navController = rememberNavController()
-//    LoginScreen(navController = navController)
-//}
+
+@Preview
+@Composable
+private fun View() {
+    LoginScreen(
+        uiState = AuthUiState(),
+        onLoginClick = {_,_ ->},
+        onResetPassClick = {},
+        onRegisterClick = {},
+        onGoogleSignInClick = {}
+    )
+
+}
