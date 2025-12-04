@@ -160,7 +160,7 @@ fun MainUserScreen(
             modifier = Modifier.padding(innerPadding) // PENTING: Agar konten tidak tertutup navbar
         ) {
             composable(BottomNavItem.Dashboard.route) {
-                DashboardUserScreen(navController = dashboardNavController, viewModel = viewModel)
+                DashboardUserScreen()
             }
             composable(BottomNavItem.Sharing.route) {
                 SharingPromptScreen()
