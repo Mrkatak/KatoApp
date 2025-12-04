@@ -67,7 +67,7 @@ fun LoginScreen(
         //if success
         if (uiState.loginSuccess) {
             Toast.makeText(context , uiState.successMessage , Toast.LENGTH_SHORT).show()
-            navController.navigate("DashboardUserScreen") {
+            navController.navigate("MainUserScreen") {
                 popUpTo("LoginScreen") { inclusive = true }
             }
             viewModel.resetState() //reset state
