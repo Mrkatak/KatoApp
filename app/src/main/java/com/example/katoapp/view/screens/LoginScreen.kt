@@ -1,6 +1,8 @@
 package com.example.katoapp.view.screens
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +48,8 @@ import androidx.navigation.NavController
 import com.example.katoapp.R
 import com.example.katoapp.viewModel.AuthViewModel
 import com.example.katoapp.viewModel.state.AuthUiState
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginRoute(
@@ -54,6 +58,25 @@ fun LoginRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(ApiException::class.java)
+            //get token
+            account?.idToken?.let { token ->
+                viewModel.googleSignIn(token)
+            }
+        } catch (e: ApiException) {
+            Toast.makeText(
+                context ,
+                "Google Sign In Gagal: ${e.statusCode}" ,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 
     //side effects
     LaunchedEffect(uiState.errorMessage , uiState.loginSuccess) {
@@ -86,7 +109,8 @@ fun LoginRoute(
             navController.navigate("RegisterScreen")
         },
         onGoogleSignInClick = {
-            //logic login dgn google
+            val intent = viewModel.getGoogleLoginIntent()
+            googleSignInLauncher.launch(intent)
         }
     )
 
@@ -97,11 +121,11 @@ fun LoginRoute(
 
 @Composable
 fun LoginScreen(
-    modifier: Modifier = Modifier,
-    uiState: AuthUiState,
-    onLoginClick: (String, String) -> Unit,
-    onResetPassClick: () -> Unit,
-    onRegisterClick: () -> Unit,
+    modifier: Modifier = Modifier ,
+    uiState: AuthUiState ,
+    onLoginClick: (String, String) -> Unit ,
+    onResetPassClick: () -> Unit ,
+    onRegisterClick: () -> Unit ,
     onGoogleSignInClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -322,7 +346,7 @@ fun LoginScreen(
             Spacer(modifier.height(16.dp))
             Button(
                 onClick = {
-                    onGoogleSignInClick
+                    onGoogleSignInClick()
                 },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondaryContainer

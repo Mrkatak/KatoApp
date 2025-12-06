@@ -13,7 +13,20 @@
           "package_name": "com.example.katoapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "15829119706-e6joeoaopff382mf7urbgecrl04d1jm5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.katoapp",
+            "certificate_hash": "363b62ac858b6dfd63826a7f3f3aae3124707738"
+          }
+        },
+        {
+          "client_id": "15829119706-phidksf9cb1u1cbnrov7tc94e0bigqkm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyACNQjmLQm8KBtwVjnACw_zBAN_C_2a4BA"
@@ -21,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "15829119706-phidksf9cb1u1cbnrov7tc94e0bigqkm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

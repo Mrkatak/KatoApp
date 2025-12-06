@@ -87,8 +87,8 @@ fun ResetPassRoute(
 @Composable
 fun ResetPassScreen(
     modifier: Modifier = Modifier ,
-    uiState: AuthUiState,
-    onResetPassClick: (String) -> Unit,
+    uiState: AuthUiState ,
+    onResetPassClick: (String) -> Unit ,
     onLoginClick: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }

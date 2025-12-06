@@ -46,7 +46,6 @@ import androidx.navigation.NavController
 import com.example.katoapp.R
 import com.example.katoapp.viewModel.AuthViewModel
 import com.example.katoapp.viewModel.state.AuthUiState
-import com.google.rpc.context.AttributeContext
 
 @Composable
 fun RegisterRoute(
@@ -92,10 +91,10 @@ fun RegisterRoute(
 
 @Composable
 fun RegisterScreen(
-    modifier: Modifier = Modifier,
-    uiState: AuthUiState,
-    onRegisterClick: (String, String, String) -> Unit,
-    onLoginClick: () -> Unit,
+    modifier: Modifier = Modifier ,
+    uiState: AuthUiState ,
+    onRegisterClick: (String, String, String) -> Unit ,
+    onLoginClick: () -> Unit ,
     onGoogleSignInClick: () -> Unit
 ) {
     var username by remember { mutableStateOf("")}

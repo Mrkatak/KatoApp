@@ -47,6 +47,28 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+    //intent google signIn
+    fun getGoogleLoginIntent() = repository.getGoogleSignInIntent()
+
+    //fun login google
+    fun googleSignIn(idToken: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true , errorMessage = null) }
+            try {
+                repository.loginWithGoogle(idToken)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false ,
+                        loginSuccess = true ,
+                        successMessage = "Login Google Berhasil"
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false , errorMessage = e.message) }
+            }
+        }
+    }
+
     //function register
     fun register(username: String , email: String , pass: String) {
         if (username.isBlank() || email.isBlank() || pass.isBlank()) {

@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.katoapp.view.screens.DashboardUserRoot
 import com.example.katoapp.view.screens.DashboardUserScreen
 import com.example.katoapp.view.screens.LoginRoute
 import com.example.katoapp.view.screens.LoginScreen
@@ -169,7 +170,7 @@ fun MainUserScreen(
             modifier = Modifier.padding(innerPadding) // PENTING: Agar konten tidak tertutup navbar
         ) {
             composable(BottomNavItem.Dashboard.route) {
-                DashboardUserScreen()
+                DashboardUserRoot()
             }
             composable(BottomNavItem.Sharing.route) {
                 SharingPromptScreen()
