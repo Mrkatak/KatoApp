@@ -78,4 +78,10 @@ dependencies {
 
     //dependency google service
     implementation(libs.play.services.auth)
+
+    //dependency cloudinary
+    implementation(libs.cloudinary.android)
+
+    // dependency coil
+    implementation(libs.coil.compose)
 }

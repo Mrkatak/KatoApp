@@ -46,6 +46,7 @@ import com.example.katoapp.viewModel.DashboardUserViewModel
 
 @Composable
 fun DashboardUserRoot(
+    navController: NavController,
     viewModel: DashboardUserViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -56,6 +57,9 @@ fun DashboardUserRoot(
         username = username,
         onSearchClicked = {
             //function search
+        },
+        onAddPromptClick = {
+            navController.navigate("AddPromptScreen")
         }
     )
 }
@@ -64,7 +68,8 @@ fun DashboardUserRoot(
 fun DashboardUserScreen(
     modifier: Modifier = Modifier,
     username: String,
-    onSearchClicked: (String) -> Unit
+    onSearchClicked: (String) -> Unit,
+    onAddPromptClick: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
 
@@ -134,7 +139,7 @@ fun DashboardUserScreen(
 
             Button(
                 onClick = {
-
+                    onAddPromptClick()
                 },
                 modifier = Modifier
                     .height(44.dp)
@@ -179,7 +184,8 @@ fun DashboardUserScreen(
 private fun View() {
     DashboardUserScreen(
         username = "Pengguna01",
-        onSearchClicked = {}
+        onSearchClicked = {},
+        onAddPromptClick = {}
     )
 
 }
