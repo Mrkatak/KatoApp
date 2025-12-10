@@ -24,7 +24,6 @@ object AppModule {
             .requestEmail()
             .build()
     }
-
     @Provides
     @Singleton
     fun provideGoogleSignInClient(
