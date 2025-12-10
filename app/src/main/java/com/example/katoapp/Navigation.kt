@@ -19,6 +19,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.katoapp.view.screens.AddPromptRoute
 import com.example.katoapp.view.screens.DashboardUserRoot
 import com.example.katoapp.view.screens.DashboardUserScreen
 import com.example.katoapp.view.screens.LoginRoute
@@ -101,6 +102,12 @@ fun Navigation(
             )
         }
 
+        composable("AddPromptScreen") {
+            AddPromptRoute(
+                navController = rootNavController
+            )
+        }
+
         // Saat masuk ke Dashboard, kita panggil Screen Container di bawah
         composable("MainUserScreen") {
             MainUserScreen(rootNavController = rootNavController, viewModel = viewModel)
@@ -170,7 +177,9 @@ fun MainUserScreen(
             modifier = Modifier.padding(innerPadding) // PENTING: Agar konten tidak tertutup navbar
         ) {
             composable(BottomNavItem.Dashboard.route) {
-                DashboardUserRoot()
+                DashboardUserRoot(
+                    navController = rootNavController
+                )
             }
             composable(BottomNavItem.Sharing.route) {
                 SharingPromptScreen()
