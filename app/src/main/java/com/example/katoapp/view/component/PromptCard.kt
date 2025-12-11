@@ -43,7 +43,7 @@ import com.example.katoapp.R
 @Composable
 fun PromptCard(
     title: String,
-    imageUrl: String,
+    imageUrl: Int, //Harusnya String
     category: String,
     rating: String,
     onClick: () -> Unit,
@@ -165,7 +165,7 @@ fun PromptCardPreview() {
         Box(modifier = Modifier.padding(16.dp)) {
             PromptCard(
                 title = "Prompt mengatasi code error dan penjelasan",
-                imageUrl = "",
+                imageUrl = R.drawable.dummy_card_image,
                 category = "Gambar",
                 rating = "4.5",
                 onClick = {}
