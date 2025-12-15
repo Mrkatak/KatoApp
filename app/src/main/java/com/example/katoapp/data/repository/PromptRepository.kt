@@ -1,11 +1,13 @@
 package com.example.katoapp.data.repository
 
 import android.net.Uri
+import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.data.remote.CloudinaryHelper
 import com.example.katoapp.data.remote.ResourceCloudinary
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -75,14 +77,14 @@ class PromptRepository @Inject constructor(
                     else -> {}
                 }
             }
-            //data map
+            //data map (nanti pake data class utk value nya)
             val promptData = hashMapOf(
                 "Judul" to title,
                 "Prompt" to content,
-                "Main Kategori" to mainCategory,
-                "Sub Kategori" to subCategories,
-                "Model_AI" to aiModel,
-                "Versi_Model_AI" to modelVersion,
+                "MainKategori" to mainCategory,
+                "SubKategori" to subCategories,
+                "ModelAI" to aiModel,
+                "VersiModelAI" to modelVersion,
                 "LinkGambar" to finalImageUrl,
                 "Status" to if (isSharing) "sharing" else "private",
                 "Tanggal" to FieldValue.serverTimestamp()
@@ -95,5 +97,34 @@ class PromptRepository @Inject constructor(
                 .await()
         }
     }
+
+    //function get private prompt
+    suspend fun getPrivatePrompts(): List<Prompt> {
+        return try {
+            val uid = auth.currentUser?.uid ?: return emptyList()
+
+            val snapshot = firestore.collection("pengguna")
+                .document(uid)
+                .collection("PrivatePrompt")
+                .orderBy("Tanggal", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            snapshot.documents.map { doc ->
+                Prompt(
+                    id = doc.id,
+                    title = doc.getString("Judul") ?: "",
+                    imageUrl = doc.getString("LinkGambar") ?: "",
+                    category = doc.getString("MainKategori") ?: "",
+                    rating = doc.getString("Rating") ?: "New",
+                    status = doc.getString("Status") ?: ""
+                )
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
 
 }

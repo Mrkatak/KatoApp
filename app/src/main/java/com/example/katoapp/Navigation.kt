@@ -1,6 +1,9 @@
 package com.example.katoapp
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -146,6 +149,7 @@ fun MainUserScreen(
                     val isSelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
 
                     NavigationBarItem(
+//                        modifier = Modifier.padding(top = 10.dp),
                         selected = isSelected,
                         onClick = {
                             dashboardNavController.navigate(item.route) {

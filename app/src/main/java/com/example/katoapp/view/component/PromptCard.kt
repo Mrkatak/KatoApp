@@ -14,10 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -43,7 +40,7 @@ import com.example.katoapp.R
 @Composable
 fun PromptCard(
     title: String,
-    imageUrl: Int, //Harusnya String
+    imageUrl: String,
     category: String,
     rating: String,
     onClick: () -> Unit,
@@ -165,7 +162,7 @@ fun PromptCardPreview() {
         Box(modifier = Modifier.padding(16.dp)) {
             PromptCard(
                 title = "Prompt mengatasi code error dan penjelasan",
-                imageUrl = R.drawable.dummy_card_image,
+                imageUrl = "R.drawable.dummy_card_image",
                 category = "Gambar",
                 rating = "4.5",
                 onClick = {}

@@ -1,5 +1,6 @@
 package com.example.katoapp.view.screens
 
+import android.widget.Space
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -82,17 +83,17 @@ fun DashboardUserRoot(
 
 data class DummyPrompt(
     val title: String,
-    val imageUrl: Int,
+    val imageUrl: String,
     val category: String,
     val rating: String
 )
 
 val prompts = listOf(
-    DummyPrompt("Style Lukisan Klasik Eropa", R.drawable.dummy_card_image, "Gambar", "4.5"),
-    DummyPrompt("Prompt cara mengelola keuangan pribadi", R.drawable.dummy_card_image, "Video", "4.5"),
-    DummyPrompt("Midjourney Ilustrasi Fantasi ", R.drawable.dummy_card_image, "Teks", "4.5"),
-    DummyPrompt("Style Lukisan Klasik Eropa", R.drawable.dummy_card_image, "Gambar", "4.5"),
-    DummyPrompt("Style Lukisan Klasik Eropa", R.drawable.dummy_card_image, "Gambar", "4.5")
+    DummyPrompt("Style Lukisan Klasik Eropa", "", "Gambar", "4.5"),
+    DummyPrompt("Prompt cara mengelola keuangan pribadi", "", "Video", "4.5"),
+    DummyPrompt("Midjourney Ilustrasi Fantasi ", "R.drawable.dummy_card_image", "Teks", "4.5"),
+    DummyPrompt("Style Lukisan Klasik Eropa", "R.drawable.dummy_card_image", "Gambar", "4.5"),
+    DummyPrompt("Style Lukisan Klasik Eropa", "R.drawable.dummy_card_image", "Gambar", "4.5")
 
 )
 
@@ -110,59 +111,62 @@ fun DashboardUserScreen(
         mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
     }
 
-    Scaffold(
-        topBar = {
-            Column(
-                modifier
-                    .fillMaxWidth()
-            ) {
-                Row(
-                    modifier
-                        .fillMaxWidth()
-                        .padding(top = 36.dp)
-                        .padding(start = 26.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.default_profile),
-                        contentDescription = "default profile",
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(
-                                shape = RoundedCornerShape(100.dp)
-                            )
-                            .background(
-                                color = MaterialTheme.colorScheme.secondary ,
-                                shape = CircleShape
-                            ),
-                        contentScale = ContentScale.Crop
-                    )
-
-                    Text(
-                        text = "Hallo,\n" +
-                                "${username}!" ,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
-
-                Spacer(modifier.height(16.dp))
-                SearchBar(
-                    modifier = Modifier.padding(horizontal = 26.dp),
-                    query = searchQuery,
-                    onQueryChange = { newText ->
-                        searchQuery = newText
-                    },
-                    onSearchClicked = {
-                        onSearchClicked(searchQuery)
-                    }
-                )
-            }
-        }
-    ) { innerPadding ->
+    Column(
+        modifier
+            .fillMaxSize()
+    ) {
         Column(
             modifier
-                .padding(innerPadding)
+                .fillMaxWidth()
+                .background(color = MaterialTheme.colorScheme.background)
+        ) {
+            Row(
+                modifier
+                    .fillMaxWidth()
+                    .padding(top = 36.dp)
+                    .padding(start = 26.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.default_profile),
+                    contentDescription = "default profile",
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(
+                            shape = RoundedCornerShape(100.dp)
+                        )
+                        .background(
+                            color = MaterialTheme.colorScheme.secondary ,
+                            shape = CircleShape
+                        ),
+                    contentScale = ContentScale.Crop
+                )
+
+                Text(
+                    text = "Hallo,\n" +
+                            "${username}!" ,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
+
+            Spacer(modifier.height(16.dp))
+            SearchBar(
+                modifier = Modifier.padding(horizontal = 26.dp),
+                query = searchQuery,
+                onQueryChange = { newText ->
+                    searchQuery = newText
+                },
+                onSearchClicked = {
+                    onSearchClicked(searchQuery)
+                }
+            )
+        }
+
+
+        Spacer(modifier.height(16.dp))
+        Column(
+            modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .background(color = MaterialTheme.colorScheme.background),
@@ -250,6 +254,7 @@ fun DashboardUserScreen(
             Column(
                 modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 26.dp)
             ) {
                 Row(
                     modifier
@@ -279,7 +284,6 @@ fun DashboardUserScreen(
                 }
 
                 Spacer(modifier.height(8.dp))
-
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -299,9 +303,11 @@ fun DashboardUserScreen(
 
             }
 
+            Spacer(modifier.height(16.dp))
             Column(
                 modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 26.dp)
             ) {
                 Row(
                     modifier
@@ -356,9 +362,19 @@ fun DashboardUserScreen(
 
 
         }
+
+
+
+
+
+
+
+
     }
 
 }
+
+
 
 
 @Preview
