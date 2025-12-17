@@ -19,21 +19,26 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.katoapp.view.screens.AddPromptRoute
 import com.example.katoapp.view.screens.DashboardUserRoot
 import com.example.katoapp.view.screens.DashboardUserScreen
 import com.example.katoapp.view.screens.LoginRoute
 import com.example.katoapp.view.screens.LoginScreen
 import com.example.katoapp.view.screens.ProfileScreen
+import com.example.katoapp.view.screens.PromptDetailRoute
 import com.example.katoapp.view.screens.RegisterRoute
 import com.example.katoapp.view.screens.RegisterScreen
 import com.example.katoapp.view.screens.ResetPassRoute
 import com.example.katoapp.view.screens.ResetPassScreen
+import com.example.katoapp.view.screens.SavePromptRoute
 import com.example.katoapp.view.screens.SavePromptScreen
+import com.example.katoapp.view.screens.SharingPromptRoute
 import com.example.katoapp.view.screens.SharingPromptScreen
 import com.example.katoapp.viewModel.AuthViewModel
 
@@ -112,6 +117,19 @@ fun Navigation(
             )
         }
 
+        composable(
+            route = "PromptDetailScreen/{promptId}",
+            arguments = listOf(
+                navArgument("promptId") { type = NavType.StringType }
+            )
+        ) {
+            // Panggil PromptDetailRoute
+            PromptDetailRoute(
+                navController = rootNavController
+            )
+        }
+
+
         // Saat masuk ke Dashboard, kita panggil Screen Container di bawah
         composable("MainUserScreen") {
             MainUserScreen(rootNavController = rootNavController, viewModel = viewModel)
@@ -187,10 +205,14 @@ fun MainUserScreen(
                 )
             }
             composable(BottomNavItem.Sharing.route) {
-                SharingPromptScreen()
+                SharingPromptRoute(
+                    navController = rootNavController
+                )
             }
             composable(BottomNavItem.Simpan.route) {
-                SavePromptScreen()
+                SavePromptRoute(
+                    navController = rootNavController
+                )
             }
             composable(BottomNavItem.Profil.route) {
                 ProfileScreen(

@@ -42,14 +42,44 @@ import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.viewModel.SavePromptViewModel
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.navigation.NavController
+import com.example.katoapp.viewModel.state.SavePromptUiState
+
+@Composable
+fun SavePromptRoute(
+    navController: NavController ,
+    viewModel: SavePromptViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    SavePromptScreen(
+        uiState = uiState,
+        // Event Ganti Filter
+        onFilterChanged = { filter ->
+            viewModel.onFilterChanged(filter)
+        },
+        // Event Refresh
+        onRefresh = {
+            viewModel.onRefresh()
+        },
+        // Event Klik Card -> Navigasi ke Detail
+        onPromptClick = { promptId ->
+            // Navigasi membawa ID Prompt sebagai argumen
+            navController.navigate("PromptDetailScreen/$promptId")
+        }
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavePromptScreen(
     modifier: Modifier = Modifier,
-    viewModel: SavePromptViewModel = hiltViewModel()
+    uiState: SavePromptUiState,
+    viewModel: SavePromptViewModel = hiltViewModel(),
+    onRefresh: () -> Unit,
+    onFilterChanged: (String) -> Unit,
+    onPromptClick: (String) -> Unit
 ) {
-    val uiState by viewModel.uiState.collectAsState()
 
     Box(
         modifier
@@ -132,8 +162,7 @@ fun SavePromptScreen(
                                 category = displayCategory,
                                 rating = if (prompt.rating.isEmpty()) "New" else prompt.rating,
                                 onClick = {
-                                    // nanti navigasi ke detail card screen
-                                    println("Clicked: ${prompt.title}")
+                                    onPromptClick(prompt.id)
                                 }
                             )
                         }
@@ -186,9 +215,17 @@ fun FilterButton(
 
 
 
-@Preview
-@Composable
-private fun View() {
-    SavePromptScreen()
-
-}
+//@Preview
+//@Composable
+//private fun View() {
+//    SavePromptScreen(
+//        uiState = {},
+//        // Event Ganti Filter
+//        onFilterChanged = {},
+//        // Event Refresh
+//        onRefresh = { },
+//        // Event Klik Card -> Navigasi ke Detail
+//        onPromptClick = { }
+//    )
+//
+//}

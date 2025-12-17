@@ -22,24 +22,17 @@ class SavePromptViewModel @Inject constructor(
     val uiState: StateFlow<SavePromptUiState> = _uiState.asStateFlow()
 
     init {
-        // Load data default (Private) saat pertama buka
         fetchPrivatePrompts()
     }
 
     init {
-        // Load data awal
         loadDataBasedOnFilter("Private")
     }
 
     //function filter data
     fun onFilterChanged(filter: String) {
         _uiState.update { it.copy(selectedFilter = filter) }
-
-        when (filter) {
-            "Private" -> fetchPrivatePrompts()
-            "Sharing" -> clearData()
-            "Simpan" -> clearData()
-        }
+        loadDataBasedOnFilter(filter)
     }
 
     //function get private prompt
@@ -71,10 +64,26 @@ class SavePromptViewModel @Inject constructor(
     }
 
     private fun loadDataBasedOnFilter(filter: String, isRefresh: Boolean = false) {
-        when (filter) {
-            "Private" -> fetchPrivatePrompts(isRefresh)
-            "Sharing" -> clearData() // Sementara kosong
-            "Simpan" -> clearData()  // Sementara kosong
+        viewModelScope.launch {
+            // Tampilkan loading besar hanya jika bukan sedang refresh (tarik layar)
+            if (!isRefresh) {
+                _uiState.update { it.copy(isLoading = true) }
+            }
+
+            // Panggil fungsi Repository yang sesuai
+            val result = when (filter) {
+                "Private" -> repository.getPrivatePrompts() // Ambil dari koleksi pribadi user
+                "Sharing" -> repository.getSharingPrompts() // Ambil dari koleksi publik (SharingPrompt)
+                "Simpan" -> emptyList() // Belum ada fitur bookmark
+                else -> emptyList()
+            }
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    prompts = result
+                )
+            }
         }
     }
 

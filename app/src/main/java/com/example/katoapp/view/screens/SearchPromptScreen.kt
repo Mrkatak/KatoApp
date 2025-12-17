@@ -1,37 +1,52 @@
 package com.example.katoapp.view.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalFocusManager
-import com.example.katoapp.view.component.SearchBar
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.sp
+import com.example.katoapp.viewModel.SearchPromptViewModel
 
 @Composable
-fun SearchPromptScreen(
-    modifier: Modifier = Modifier,
-    onQueryChange: (String) -> Unit,
-    onSearchClicked: () -> Unit,
-    onSearch: String
+fun SearchPromptRoute(
+    navController: NavController,
+    viewModel: SearchPromptViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsState()
 
-    val focusManager = LocalFocusManager.current //control input keyboard
-    val pillShape: RoundedCornerShape = CircleShape
-    Column(
+    SearchPromptScreen()
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+fun SearchPromptScreen(
+    modifier: Modifier = Modifier
+) {
+    Box(
         modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        SearchBar(
-            query = onSearch,
-            onQueryChange = onQueryChange,
-            onSearchClicked = onSearchClicked
+        Text(
+            text = "Search Screen",
+            fontSize = 34.sp,
+            fontWeight = FontWeight.Bold
         )
     }
+}
+
+@Preview
+@Composable
+private fun View() {
+    SearchPromptScreen()
 
 }

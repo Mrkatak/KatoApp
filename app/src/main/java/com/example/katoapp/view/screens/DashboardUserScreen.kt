@@ -250,6 +250,7 @@ fun DashboardUserScreen(
                     }
                 }
             }
+
             Spacer(modifier.height(16.dp))
             Column(
                 modifier

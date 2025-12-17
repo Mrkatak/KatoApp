@@ -3,12 +3,10 @@ package com.example.katoapp.view.screens
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -19,6 +17,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,56 +33,59 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.katoapp.R
+import com.example.katoapp.data.model.Prompt
+import com.example.katoapp.view.component.CategoryMapper
+import com.example.katoapp.viewModel.PromptDetailViewModel
+import java.text.SimpleDateFormat
+import java.util.Locale
 
-data class PromptDetail(
-    val id: String,
-    val title: String,
-    val imageUrl: String,
-    val mainCategory: String,
-    val subCategories: List<String>,
-    val promptContent: String,
-    val rating: String,
-    val usageCount: Int,
-    val aiModel: String,
-    val modelVersion: String,
-    val createdAt: String
-)
-
+// --- 1. ROUTE (Logic Holder & Data Fetcher) ---
 @Composable
 fun PromptDetailRoute(
     navController: NavController,
-    promptId: String?
+    // ViewModel akan otomatis mengambil ID dari SavedStateHandle navigasi
+    viewModel: PromptDetailViewModel = hiltViewModel()
 ) {
-    val dummyDetail = PromptDetail(
-        id = "123",
-        title = "Style Lukisan Klasik Eropa",
-        imageUrl = "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?q=80&w=600&auto=format&fit=crop",
-        mainCategory = "Gambar",
-        subCategories = listOf("Design", "Lukisan", "Klasik", "Wallpaper", "Art"),
-        promptContent = "A mystical night-scene in an East Asian fantasy style. A lone monk wearing traditional robes walks along a stone path toward a small wooden temple lit warmly by lanterns. In the distance, a massive rock platform rises from the clouds...",
-        rating = "4.5",
-        usageCount = 30,
-        aiModel = "Midjourney",
-        modelVersion = "V7",
-        createdAt = "11 November 2025"
-    )
+    val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    PromptDetailScreen(
-        data = dummyDetail,
-        onBackClick = { navController.popBackStack() },
-        onSaveClick = { println("Simpan ke koleksi") },
-        onCopyClick = { println("Copy text") },
-        onReportClick = { println("Lapor") }
-    )
+    // Handle Loading & Error
+    if (uiState.isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (uiState.error != null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = uiState.error ?: "Terjadi Kesalahan", color = Color.Red)
+        }
+    } else if (uiState.prompt != null) {
+        // Jika data ada, tampilkan Screen
+        PromptDetailScreen(
+            data = uiState.prompt!!,
+            onBackClick = { navController.popBackStack() },
+            onSaveClick = {
+                // Logic simpan ulang/bookmark nanti
+                Toast.makeText(context, "Fitur Simpan (Bookmark) segera hadir!", Toast.LENGTH_SHORT).show()
+            },
+            onCopyClick = { text ->
+                // Logic copy ada di dalam screen, ini callback tambahan jika perlu
+            },
+            onReportClick = {
+                Toast.makeText(context, "Laporan terkirim", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 }
 
+// --- 2. SCREEN (UI Murni / Stateless) ---
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptDetailScreen(
-    data: PromptDetail,
+    data: Prompt, // Menggunakan Model Prompt Asli dari Firestore
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     onCopyClick: (String) -> Unit,
@@ -90,6 +93,16 @@ fun PromptDetailScreen(
 ) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+
+    // Formatter Tanggal (Mengubah timestamp jadi "12 Desember 2025")
+    val dateString = try {
+        val formatter = SimpleDateFormat("dd MMMM yyyy", Locale("id", "ID")) // Format Indonesia
+        data.createdAt?.let { formatter.format(it) } ?: "-"
+    } catch (e: Exception) { "-" }
+
+    // Mapping Kategori Utama untuk Icon & Nama Tampilan
+    val categoryIcon = CategoryMapper.getIcon(data.category)
+    val displayCategory = CategoryMapper.getDisplayName(data.category)
 
     Scaffold(
         topBar = {
@@ -101,6 +114,7 @@ fun PromptDetailScreen(
                     }
                 },
                 actions = {
+                    // Tombol Edit (Opsional)
                     IconButton(onClick = { }) {
                         Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.Gray)
                     }
@@ -120,6 +134,7 @@ fun PromptDetailScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            // 1. JUDUL
             Text(
                 text = data.title,
                 style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
@@ -128,11 +143,14 @@ fun PromptDetailScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // 2. GAMBAR UTAMA
             AsyncImage(
                 model = data.imageUrl,
                 contentDescription = data.title,
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.ic_image),
+                placeholder = painterResource(R.drawable.ic_image), // Placeholder default
+                error = painterResource(R.drawable.ic_image),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(250.dp)
@@ -140,38 +158,45 @@ fun PromptDetailScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // 3. STATISTIK (Kategori, Rating, Usage)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                StatItem(label = "Kategori", value = data.mainCategory, icon = R.drawable.ic_teks)
-                StatItem(label = "Rating", value = data.rating, iconVector = Icons.Default.Star, iconColor = Color(0xFFFFD700))
-                StatItem(label = "Penggunaan", value = "${data.usageCount}", icon = R.drawable.ic_sharing)
+                StatItem(label = "Kategori", value = displayCategory, icon = categoryIcon)
+                StatItem(label = "Rating", value = data.rating.ifEmpty { "New" }, iconVector = Icons.Default.Star, iconColor = Color(0xFFFFD700))
+                StatItem(label = "Penggunaan", value = "${data.usageCount}", icon = R.drawable.ic_sharing) // Ganti icon sharing sesuai project
             }
 
             Spacer(modifier = Modifier.height(24.dp))
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Kategori Umum",
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(data.subCategories) { tag ->
-                        SuggestionChip(
-                            onClick = { },
-                            label = { Text(tag) },
-                            shape = RoundedCornerShape(100.dp),
-                            border = BorderStroke(
-                                width = 1.dp,
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+
+            // 4. KATEGORI UMUM (Tags / Chips)
+            if (data.subCategories.isNotEmpty()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = "Kategori Umum",
+                        style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        items(data.subCategories) { tag ->
+                            SuggestionChip(
+                                onClick = { },
+                                label = { Text(tag) },
+                                shape = RoundedCornerShape(100.dp),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                )
                             )
-                        )
+                        }
                     }
                 }
+                Spacer(modifier = Modifier.height(24.dp))
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // 5. ISI PROMPT (Text Box)
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Prompt",
@@ -186,7 +211,7 @@ fun PromptDetailScreen(
                         .padding(20.dp)
                 ) {
                     Text(
-                        text = data.promptContent,
+                        text = data.content, // Field di model adalah 'content'
                         style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp),
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -194,26 +219,30 @@ fun PromptDetailScreen(
             }
 
             Spacer(modifier = Modifier.height(24.dp))
+
+            // 6. TOMBOL AKSI
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Tombol Simpan
                 Button(
                     onClick = onSaveClick,
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
-                    Icon(imageVector = Icons.Default.AccountBox, contentDescription = null)
+                    Icon(imageVector = Icons.Default.AccountBox, contentDescription = null) // Ganti icon save
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Simpan")
                 }
 
+                // Tombol Salin (Copy)
                 Button(
                     onClick = {
-                        clipboardManager.setText(AnnotatedString(data.promptContent))
+                        clipboardManager.setText(AnnotatedString(data.content))
                         Toast.makeText(context, "Prompt disalin!", Toast.LENGTH_SHORT).show()
-                        onCopyClick(data.promptContent)
+                        onCopyClick(data.content)
                     },
                     modifier = Modifier.weight(1f).height(50.dp),
                     shape = RoundedCornerShape(12.dp),
@@ -222,13 +251,14 @@ fun PromptDetailScreen(
                         contentColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
                 ) {
-                    Icon(imageVector = Icons.Default.AddCircle, contentDescription = null)
+                    Icon(imageVector = Icons.Default.AddCircle, contentDescription = null) // Ganti icon copy
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Salin")
                 }
             }
-
             Spacer(modifier = Modifier.height(32.dp))
+
+            // 7. METADATA
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -240,11 +270,12 @@ fun PromptDetailScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     MetadataRow("Model AI", data.aiModel)
                     MetadataRow("Versi Model AI", data.modelVersion)
-                    MetadataRow("Tanggal Pembuatan", data.createdAt)
+                    MetadataRow("Tanggal Pembuatan", dateString) // Gunakan tanggal yang sudah diformat
                 }
             }
-
             Spacer(modifier = Modifier.height(32.dp))
+
+            // 8. REPORT (Footer)
             TextButton(onClick = onReportClick) {
                 Text(
                     text = "Laporkan prompt",
@@ -258,6 +289,7 @@ fun PromptDetailScreen(
     }
 }
 
+// --- KOMPONEN KECIL (HELPER) ---
 
 @Composable
 fun StatItem(
@@ -304,10 +336,10 @@ fun MetadataRow(label: String, value: String) {
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun DetailPreview() {
-    MaterialTheme {
-        PromptDetailRoute(navController = androidx.navigation.compose.rememberNavController(), promptId = "1")
-    }
-}
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun DetailPreview() {
+//    MaterialTheme {
+//        PromptDetailRoute(navController = androidx.navigation.compose.rememberNavController()
+//    }
+//}
