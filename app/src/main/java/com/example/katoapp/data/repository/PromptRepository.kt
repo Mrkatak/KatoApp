@@ -1,6 +1,7 @@
 package com.example.katoapp.data.repository
 
 import android.net.Uri
+import androidx.compose.animation.core.snap
 import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.data.remote.CloudinaryHelper
 import com.example.katoapp.data.remote.ResourceCloudinary
@@ -21,6 +22,8 @@ class PromptRepository @Inject constructor(
     private val auth: FirebaseAuth,
     private val cloudinaryHelper: CloudinaryHelper
 ) {
+
+    private val adminDocId = "R7LaZTfFIzlePgo8crgK"
 
     //function get kategori utama
     suspend fun getMainCategories(): List<String> {
@@ -103,7 +106,7 @@ class PromptRepository @Inject constructor(
             //save sharing to admin
             if (isSharing) {
                 val adminRef = firestore.collection("admin")
-                    .document("R7LaZTfFIzlePgo8crgK")
+                    .document(adminDocId)
                     .collection("SharingPrompt")
                     .document(promptId)
                 batch.set(adminRef, promptData)
@@ -156,24 +159,72 @@ class PromptRepository @Inject constructor(
     //function get prompt by id
     suspend fun getPromptById(promptId: String): Prompt? {
         return try {
-            val uid = auth.currentUser?.uid ?: return null
+            val uid = auth.currentUser?.uid
 
-            //cari di PrivatePrompt user
-            val doc = firestore.collection("pengguna")
-                .document(uid)
-                .collection("PrivatePrompt")
+            //cek di private pengguna
+            if (uid != null) {
+                val privateDoc = firestore.collection("pengguna")
+                    .document(uid)
+                    .collection("PrivatePrompt")
+                    .document(promptId)
+                    .get()
+                    .await()
+
+                if (privateDoc.exists()) {
+                    return mapDocumentToPrompt(privateDoc)
+                }
+            }
+
+            //cek di sharing admin
+            val publicDoc = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
                 .document(promptId)
                 .get()
                 .await()
 
-            if (doc.exists()) {
-                mapDocumentToPrompt(doc)
-            } else {
-                null
+            if (publicDoc.exists()) {
+                return mapDocumentToPrompt(publicDoc)
             }
+            null
+
         } catch (e: Exception) {
             e.printStackTrace()
             null
+        }
+    }
+
+    //function get top 5 popular prompt
+    suspend fun getPopularPrompts(): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .orderBy("UsegeCount", Query.Direction.DESCENDING)
+                .limit(5)
+                .get()
+                .await()
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    //function get top 5 ratting prompt
+    suspend fun getTopRatedPrompts(): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .orderBy("Rating", Query.Direction.DESCENDING)
+                .limit(5)
+                .get()
+                .await()
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception){
+            e.printStackTrace()
+            emptyList()
         }
     }
 
@@ -196,7 +247,6 @@ class PromptRepository @Inject constructor(
             }
             return emptyList()
         }
-
         return Prompt(
             id = doc.id,
             title = getField("Judul"),
@@ -213,6 +263,8 @@ class PromptRepository @Inject constructor(
             usageCount = doc.getLong("UsageCount")?.toInt() ?: 0
         )
     }
+
+
 
 
 

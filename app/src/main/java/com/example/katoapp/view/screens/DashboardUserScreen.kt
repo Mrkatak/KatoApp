@@ -1,11 +1,10 @@
 package com.example.katoapp.view.screens
 
-import android.widget.Space
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -39,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.focusModifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.katoapp.R
+import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.ui.theme.primaryLightMediumContrast
 import com.example.katoapp.view.component.Carousel
 import com.example.katoapp.view.component.CategoryMapper
@@ -69,47 +70,36 @@ fun DashboardUserRoot(
 
     DashboardUserScreen(
         username = username,
-        prompts = prompts,
+        topRatedPrompts = uiState.topRatedPrompts,
         categories = promptUiState.categories,
+        popularPrompts = uiState.popularPrompts,
         onSearchClicked = {
-            //function search
+            navController.navigate("SharingPromptScreen")
         },
         onAddPromptClick = {
             navController.navigate("AddPromptScreen")
+        },
+        onPromptClick = { promptId ->
+            navController.navigate("PromptDetailScreen/$promptId")
         }
 
     )
 }
 
-data class DummyPrompt(
-    val title: String,
-    val imageUrl: String,
-    val category: String,
-    val rating: String
-)
-
-val prompts = listOf(
-    DummyPrompt("Style Lukisan Klasik Eropa", "", "Gambar", "4.5"),
-    DummyPrompt("Prompt cara mengelola keuangan pribadi", "", "Video", "4.5"),
-    DummyPrompt("Midjourney Ilustrasi Fantasi ", "R.drawable.dummy_card_image", "Teks", "4.5"),
-    DummyPrompt("Style Lukisan Klasik Eropa", "R.drawable.dummy_card_image", "Gambar", "4.5"),
-    DummyPrompt("Style Lukisan Klasik Eropa", "R.drawable.dummy_card_image", "Gambar", "4.5")
-
-)
 
 @Composable
 fun DashboardUserScreen(
     modifier: Modifier = Modifier ,
     username: String ,
     categories: List<String> ,
-    prompts: List<DummyPrompt> = emptyList() ,
+    popularPrompts: List<Prompt> ,
+    topRatedPrompts: List<Prompt> ,
     onSearchClicked: (String) -> Unit ,
-    onAddPromptClick: () -> Unit
+    onAddPromptClick: () -> Unit ,
+    onPromptClick: (String) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember(categories) {
-        mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
-    }
+    var selectedCategory by remember {mutableStateOf("")}
 
     Column(
         modifier
@@ -285,20 +275,37 @@ fun DashboardUserScreen(
                 }
 
                 Spacer(modifier.height(8.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items(prompts) { prompt ->
-                        PromptCard(
-                            title = prompt.title,
-                            imageUrl = prompt.imageUrl,
-                            category = prompt.category,
-                            rating = prompt.rating,
-                            onClick = {
-                                println("di klik")
-                            }
+                if (popularPrompts.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Belum ada data populer.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
+                    }
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        items(popularPrompts) { prompt ->
+                            val displayCategory = CategoryMapper.getDisplayName(prompt.category)
+                            PromptCard(
+                                title = prompt.title,
+                                imageUrl = prompt.imageUrl,
+                                category = displayCategory,
+                                rating = if (prompt.rating.isEmpty()) "New"
+                                            else prompt.rating,
+                                onClick = {
+                                    onPromptClick(prompt.id)
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -317,7 +324,7 @@ fun DashboardUserScreen(
                     horizontalArrangement = Arrangement.Absolute.SpaceBetween
                 ) {
                     Text(
-                        text = "Prompt Gambar",
+                        text = "Rating Tertinggi",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -338,23 +345,41 @@ fun DashboardUserScreen(
                 }
 
                 Spacer(modifier.height(8.dp))
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items(prompts) { prompt ->
-                        PromptCard(
-                            title = prompt.title,
-                            imageUrl = prompt.imageUrl,
-                            category = prompt.category,
-                            rating = prompt.rating,
-                            onClick = {
-                                println("di klik")
-                            }
+                if (popularPrompts.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Belum ada data top Rated Prompt",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
                         )
                     }
+                } else {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        items(topRatedPrompts) { prompt ->
+                            val displayCategory = CategoryMapper.getDisplayName(prompt.category)
+                            PromptCard(
+                                title = prompt.title,
+                                imageUrl = prompt.imageUrl,
+                                category = displayCategory,
+                                rating = if (prompt.rating.isEmpty()) "New"
+                                else prompt.rating,
+                                onClick = {
+                                    onPromptClick(prompt.id)
+                                }
+                            )
+                        }
+                    }
                 }
+
+
 
             }
 
@@ -385,7 +410,10 @@ private fun View() {
         username = "Pengguna01",
         onSearchClicked = {},
         onAddPromptClick = {},
-        categories = listOf("Text to Text", "Text to Image", "Text to Video")
+        categories = listOf("Teks", "Gambar", "Video", "Suara"),
+        popularPrompts = emptyList(),
+        topRatedPrompts = emptyList(),
+        onPromptClick = {}
     )
 
 }

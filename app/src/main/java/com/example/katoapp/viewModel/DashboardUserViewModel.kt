@@ -3,6 +3,7 @@ package com.example.katoapp.viewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.katoapp.data.repository.AuthRepository
+import com.example.katoapp.data.repository.PromptRepository
 import com.example.katoapp.viewModel.state.DashboardUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DashboardUserViewModel @Inject constructor(
-    private val repository: AuthRepository
+    private val repository: AuthRepository,
+    private val promptRepository: PromptRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DashboardUiState())
@@ -22,6 +24,8 @@ class DashboardUserViewModel @Inject constructor(
 
     init {
         loadUserData()
+        loadPopularPrompts()
+        loadTopRatedPrompts()
     }
 
     //function load user data
@@ -58,6 +62,26 @@ class DashboardUserViewModel @Inject constructor(
                         errorMessage = "User tidak di temukan"
                     )
                 }
+            }
+        }
+    }
+
+    //fun get popular prompt (5)
+    private fun loadPopularPrompts() {
+        viewModelScope.launch {
+            val result = promptRepository.getPopularPrompts()
+
+            _uiState.update {
+                it.copy(popularPrompts = result)
+            }
+        }
+    }
+
+    private fun loadTopRatedPrompts() {
+        viewModelScope.launch {
+            val result = promptRepository.getTopRatedPrompts()
+            _uiState.update {
+                it.copy(topRatedPrompts = result)
             }
         }
     }
