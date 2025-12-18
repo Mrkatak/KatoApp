@@ -228,6 +228,25 @@ class PromptRepository @Inject constructor(
         }
     }
 
+    //function get prompt by main category
+    suspend fun getPromptsByCategory(category: String): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .whereEqualTo("MainKategori", category)
+                .orderBy("Tanggal", Query.Direction.DESCENDING)
+                .get()
+                .await()
+
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            android.util.Log.e("PromptRepository", "Error getting category prompts: ${e.message}")
+            emptyList()
+        }
+    }
+
     private fun mapSnapshotToPromptList(snapshot: com.google.firebase.firestore.QuerySnapshot): List<Prompt> {
         return snapshot.documents.map { doc -> mapDocumentToPrompt(doc) }
     }

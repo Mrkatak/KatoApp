@@ -1,5 +1,7 @@
 package com.example.katoapp.view.component
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -33,10 +35,12 @@ import com.example.katoapp.R
 
 @Composable
 fun SearchBar(
+    modifier: Modifier = Modifier,
     query: String,
     onQueryChange: (String) -> Unit,
     onSearchClicked: () -> Unit,
-    modifier: Modifier = Modifier
+    readOnly: Boolean = false,
+    onClick: (() -> Unit)? = null
 ) {
     val focusManager = LocalFocusManager.current //control input keyboard
     val pillShape: RoundedCornerShape = CircleShape
@@ -53,51 +57,66 @@ fun SearchBar(
         shape = pillShape,
         color = MaterialTheme.colorScheme.background,
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 26.dp)
+        Box(
+            modifier = Modifier.fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier.weight(1f),
-                contentAlignment = Alignment.CenterStart
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 26.dp)
             ) {
-                //jika query kosong tampilkan "kucing lucu"
-                if (query.isEmpty()) {
-                    Text(
-                        text = "Kucing Lucu..",
-                        color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.bodyLarge
+                Box(
+                    modifier = Modifier.weight(1f),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    //jika query kosong tampilkan "kucing lucu"
+                    if (query.isEmpty()) {
+                        Text(
+                            text = "Kucing Lucu..",
+                            color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
+
+                    BasicTextField(
+                        value = query,
+                        onValueChange = {
+                            if (!readOnly) onQueryChange(it)
+                        },
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            color = MaterialTheme.colorScheme.secondary
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Search
+                        ) ,
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                onSearchClicked()
+                                focusManager.clearFocus()
+                            }
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
 
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQueryChange,
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.secondary
-                    ),
-                    keyboardOptions = KeyboardOptions(
-                        imeAction = ImeAction.Search
-                    ) ,
-                    keyboardActions = KeyboardActions(
-                        onSearch = {
-                            onSearchClicked()
-                            focusManager.clearFocus()
-                        }
-                    ),
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                Icon(
+                    painter = painterResource(R.drawable.ic_search) ,
+                    contentDescription = "Search Icon",
+                    tint = MaterialTheme.colorScheme.secondary,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .padding(start = 8.dp)
                 )
             }
 
-            Icon(
-                painter = painterResource(R.drawable.ic_search) ,
-                contentDescription = "Search Icon",
-                tint = MaterialTheme.colorScheme.secondary,
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(start = 8.dp)
-            )
+            if (readOnly && onClick != null){
+                Box(
+                    modifier
+                        .matchParentSize()
+                        .clickable(onClick = onClick)
+                )
+            }
         }
     }
 }

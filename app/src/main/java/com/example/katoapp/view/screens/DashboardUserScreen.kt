@@ -25,7 +25,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -37,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -45,9 +43,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import com.example.katoapp.R
 import com.example.katoapp.data.model.Prompt
-import com.example.katoapp.ui.theme.primaryLightMediumContrast
 import com.example.katoapp.view.component.Carousel
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.MainCategoryButton
@@ -55,11 +53,11 @@ import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.view.component.SearchBar
 import com.example.katoapp.viewModel.DashboardUserViewModel
 import com.example.katoapp.viewModel.PromptOrgViewModel
-import kotlin.contracts.contract
 
 @Composable
-fun DashboardUserRoot(
+fun DashboardUserRoute(
     navController: NavController,
+    dashboardNavController: NavController,
     viewModel: DashboardUserViewModel = hiltViewModel(),
     promptOrgViewModel: PromptOrgViewModel = hiltViewModel()
 ) {
@@ -74,10 +72,19 @@ fun DashboardUserRoot(
         categories = promptUiState.categories,
         popularPrompts = uiState.popularPrompts,
         onSearchClicked = {
-            navController.navigate("SharingPromptScreen")
+            dashboardNavController.navigate("sharing") {
+                popUpTo(dashboardNavController.graph.findStartDestination().id){
+                    saveState = true
+                }
+                launchSingleTop = true
+                restoreState = true
+            }
         },
         onAddPromptClick = {
             navController.navigate("AddPromptScreen")
+        },
+        onCategoryClick = { categoryDbValue ->
+            navController.navigate("PromptSearchResultScreen/$categoryDbValue")
         },
         onPromptClick = { promptId ->
             navController.navigate("PromptDetailScreen/$promptId")
@@ -96,6 +103,7 @@ fun DashboardUserScreen(
     topRatedPrompts: List<Prompt> ,
     onSearchClicked: (String) -> Unit ,
     onAddPromptClick: () -> Unit ,
+    onCategoryClick: (String) -> Unit,
     onPromptClick: (String) -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -142,13 +150,14 @@ fun DashboardUserScreen(
 
             Spacer(modifier.height(16.dp))
             SearchBar(
-                modifier = Modifier.padding(horizontal = 26.dp),
+                modifier = Modifier
+                    .padding(horizontal = 26.dp),
                 query = searchQuery,
-                onQueryChange = { newText ->
-                    searchQuery = newText
-                },
-                onSearchClicked = {
-                    onSearchClicked(searchQuery)
+                onQueryChange = { },
+                onSearchClicked = { },
+                readOnly = true,
+                onClick = {
+                    onSearchClicked("")
                 }
             )
         }
@@ -234,7 +243,10 @@ fun DashboardUserScreen(
                             text = CategoryMapper.getDisplayName(dbValue),
                             icon = CategoryMapper.getIcon(dbValue),
                             isSelected = (selectedCategory == dbValue),
-                            onClick = { selectedCategory = dbValue}
+                            onClick = {
+                                selectedCategory = dbValue
+                                onCategoryClick(dbValue)
+                            }
                         )
 
                     }
@@ -413,7 +425,8 @@ private fun View() {
         categories = listOf("Teks", "Gambar", "Video", "Suara"),
         popularPrompts = emptyList(),
         topRatedPrompts = emptyList(),
-        onPromptClick = {}
+        onPromptClick = {},
+        onCategoryClick = {}
     )
 
 }

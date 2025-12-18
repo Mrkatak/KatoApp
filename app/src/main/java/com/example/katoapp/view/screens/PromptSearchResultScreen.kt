@@ -1,34 +1,84 @@
 package com.example.katoapp.view.screens
 
-import android.widget.Space
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.katoapp.data.model.Prompt
+import com.example.katoapp.view.component.CategoryMapper
+import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.view.component.SearchBar
+import com.example.katoapp.viewModel.SearchPromptViewModel
+
 
 @Composable
+fun PromptSearchResultRoute(
+    navController: NavController ,
+    categoryName: String,
+    viewModel: SearchPromptViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(categoryName) {
+        viewModel.searchByCategory(categoryName)
+    }
+
+    PromptSearchResultScreen(
+        categoryTitle = CategoryMapper.getDisplayName(categoryName),
+        searchQuery = uiState.searchQuery,
+        isLoading = uiState.isLoading,
+        prompts = uiState.searchResults,
+        onQueryChange = {
+            viewModel.onQueryChange(it)
+        },
+        onSearchClicked = {
+            //fun search nanti
+        },
+        onPromptClick = { promptId ->
+            navController.navigate("PromptDetailScreen/$promptId")
+        }
+    )
+
+
+
+}
+@Composable
 fun PromptSearchResultScreen(
-    modifier: Modifier = Modifier,
-    searchQuery : String,
-    onQueryChange : (String) -> Unit,
-    onSearchClicked : (String) -> Unit
+    modifier: Modifier = Modifier ,
+    categoryTitle: String ,
+    searchQuery : String ,
+    isLoading: Boolean ,
+    prompts: List<Prompt>,
+    onQueryChange : (String) -> Unit ,
+    onSearchClicked : (String) -> Unit,
+    onPromptClick: (String) -> Unit
 ) {
     Column(
         modifier
@@ -37,7 +87,7 @@ fun PromptSearchResultScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Spacer(modifier.height(36.dp))
+        Spacer(modifier.height(72.dp))
         SearchBar(
             query = searchQuery ,
             onQueryChange = onQueryChange ,
@@ -66,7 +116,7 @@ fun PromptSearchResultScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Gambar" , //sesuaikan dengan kategori umum yang dicari, atupun UsageCount/Rating
+                    text = categoryTitle,
                     style = MaterialTheme.typography.headlineSmall ,
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
@@ -74,7 +124,46 @@ fun PromptSearchResultScreen(
         }
 
         Spacer(modifier.height(24.dp))
-        //tampilkan daftar prompt berdasarkan pencarian di sini
+        if (isLoading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (prompts.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Tidak ada prompt dengan kategori ini",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        } else {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 60.dp),
+                modifier = Modifier.fillMaxSize()
+            ) {
+                items(prompts) { prompt ->
+                    val displayCategory = CategoryMapper.getDisplayName(prompt.category)
+                    PromptCard(
+                        title = prompt.title,
+                        imageUrl = prompt.imageUrl,
+                        category = displayCategory,
+                        rating = if (prompt.rating.isEmpty()) "New" else prompt.rating,
+                        onClick = { onPromptClick(prompt.id) }
+                    )
+                }
+            }
+        }
 
 
 
@@ -93,7 +182,11 @@ private fun View() {
     PromptSearchResultScreen(
         searchQuery = "Kucing lucu..",
         onQueryChange = {},
-        onSearchClicked = {}
+        onSearchClicked = {},
+        isLoading = false,
+        prompts = listOf(),
+        onPromptClick = {},
+        categoryTitle = "Kategori Utama"
     )
 
 }

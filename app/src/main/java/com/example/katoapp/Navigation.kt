@@ -1,9 +1,6 @@
 package com.example.katoapp
 
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -14,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -26,20 +22,15 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.katoapp.view.screens.AddPromptRoute
-import com.example.katoapp.view.screens.DashboardUserRoot
-import com.example.katoapp.view.screens.DashboardUserScreen
+import com.example.katoapp.view.screens.DashboardUserRoute
 import com.example.katoapp.view.screens.LoginRoute
-import com.example.katoapp.view.screens.LoginScreen
 import com.example.katoapp.view.screens.ProfileScreen
 import com.example.katoapp.view.screens.PromptDetailRoute
+import com.example.katoapp.view.screens.PromptSearchResultRoute
 import com.example.katoapp.view.screens.RegisterRoute
-import com.example.katoapp.view.screens.RegisterScreen
 import com.example.katoapp.view.screens.ResetPassRoute
-import com.example.katoapp.view.screens.ResetPassScreen
 import com.example.katoapp.view.screens.SavePromptRoute
-import com.example.katoapp.view.screens.SavePromptScreen
 import com.example.katoapp.view.screens.SharingPromptRoute
-import com.example.katoapp.view.screens.SharingPromptScreen
 import com.example.katoapp.viewModel.AuthViewModel
 
 
@@ -50,30 +41,10 @@ sealed class BottomNavItem(
     val selectedIcon: Int,
     val unselectedIcon: Int
 ) {
-    object Dashboard : BottomNavItem(
-        "dashboard",
-        "Dashboard",
-        R.drawable.ic_home,
-        R.drawable.ic_home
-    )
-    object Sharing : BottomNavItem(
-        "sharing",
-        "Sharing",
-        R.drawable.ic_sharing,
-        R.drawable.ic_sharing
-    )
-    object Simpan : BottomNavItem(
-        "simpan",
-        "Simpan",
-        R.drawable.ic_save,
-        R.drawable.ic_save
-    )
-    object Profil : BottomNavItem(
-        "profil",
-        "Profil",
-        R.drawable.ic_profile,
-        R.drawable.ic_profile
-    )
+    object Dashboard : BottomNavItem("dashboard", "Dashboard", R.drawable.ic_home, R.drawable.ic_home)
+    object Sharing : BottomNavItem("sharing", "Sharing", R.drawable.ic_sharing, R.drawable.ic_sharing)
+    object Simpan : BottomNavItem("simpan", "Simpan", R.drawable.ic_save, R.drawable.ic_save)
+    object Profil : BottomNavItem("profil", "Profil", R.drawable.ic_profile, R.drawable.ic_profile)
 }
 
 
@@ -123,9 +94,22 @@ fun Navigation(
                 navArgument("promptId") { type = NavType.StringType }
             )
         ) {
-            // Panggil PromptDetailRoute
             PromptDetailRoute(
                 navController = rootNavController
+            )
+        }
+
+        composable(
+            route = "PromptSearchResultScreen/{categoryName}",
+            arguments = listOf(
+                navArgument("categoryName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
+
+            PromptSearchResultRoute(
+                navController = rootNavController,
+                categoryName = categoryName
             )
         }
 
@@ -167,7 +151,6 @@ fun MainUserScreen(
                     val isSelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
 
                     NavigationBarItem(
-//                        modifier = Modifier.padding(top = 10.dp),
                         selected = isSelected,
                         onClick = {
                             dashboardNavController.navigate(item.route) {
@@ -200,7 +183,8 @@ fun MainUserScreen(
             modifier = Modifier.padding(innerPadding) // PENTING: Agar konten tidak tertutup navbar
         ) {
             composable(BottomNavItem.Dashboard.route) {
-                DashboardUserRoot(
+                DashboardUserRoute(
+                    dashboardNavController = dashboardNavController,
                     navController = rootNavController
                 )
             }

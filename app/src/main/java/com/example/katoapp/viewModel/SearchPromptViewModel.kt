@@ -1,5 +1,6 @@
 package com.example.katoapp.viewModel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.katoapp.data.repository.PromptRepository
@@ -55,5 +56,20 @@ class SearchPromptViewModel @Inject constructor(
             currentState.copy(selectedCategories = currentList)
         }
         //nanti di sini panggil fungsi searchPrompt()
+    }
+
+    //fun search by main category
+    fun searchByCategory(category: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, searchResults = emptyList()) }
+            val results = repository.getPromptsByCategory(category)
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    searchResults = results
+                )
+            }
+        }
     }
 }
