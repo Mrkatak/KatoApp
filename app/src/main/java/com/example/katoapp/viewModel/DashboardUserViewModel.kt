@@ -77,6 +77,7 @@ class DashboardUserViewModel @Inject constructor(
         }
     }
 
+    //function get top rated prompt (5)
     private fun loadTopRatedPrompts() {
         viewModelScope.launch {
             val result = promptRepository.getTopRatedPrompts()

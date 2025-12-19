@@ -55,14 +55,52 @@ class SearchPromptViewModel @Inject constructor(
             }
             currentState.copy(selectedCategories = currentList)
         }
-        //nanti di sini panggil fungsi searchPrompt()
     }
+
+    //fun search by main category
+//    fun searchByCategory(category: String) {
+//        viewModelScope.launch {
+//            _uiState.update { it.copy(isLoading = true, searchResults = emptyList()) }
+//            val results = repository.getPromptsByCategory(category)
+//
+//            _uiState.update {
+//                it.copy(
+//                    isLoading = false,
+//                    searchResults = results
+//                )
+//            }
+//        }
+//    }
+
+//    fun searchByCategory(category: String) {
+//        viewModelScope.launch {
+//            _uiState.update { it.copy(isLoading = true, searchResults = emptyList()) }
+//
+//            // Panggil Repository (Cek apakah Popular atau Kategori biasa)
+//            val results = if (category == "Popular") {
+//                repository.getAllPopularPrompts()
+//            } else {
+//                repository.getPromptsByCategory(category)
+//            }
+//
+//            _uiState.update {
+//                it.copy(
+//                    isLoading = false,
+//                    searchResults = results
+//                )
+//            }
+//        }
+//    }
 
     //fun search by main category
     fun searchByCategory(category: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, searchResults = emptyList()) }
-            val results = repository.getPromptsByCategory(category)
+            val results = when (category) {
+                "Popular" -> repository.getAllPopularPrompts()
+                "Rating" -> repository.getAllTopRatedPrompts()
+                else -> repository.getPromptsByCategory(category)
+            }
 
             _uiState.update {
                 it.copy(

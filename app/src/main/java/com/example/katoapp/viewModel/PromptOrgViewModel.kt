@@ -27,6 +27,7 @@ class PromptOrgViewModel @Inject constructor(
         fetchData()
     }
 
+    //function get category
     private fun fetchData() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }

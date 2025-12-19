@@ -26,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.GeneralCategoryButton
 import com.example.katoapp.view.component.MainCategoryButton
@@ -33,16 +34,14 @@ import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.view.component.SearchBar
 import com.example.katoapp.viewModel.PromptOrgViewModel
 import com.example.katoapp.viewModel.SearchPromptViewModel
+import com.example.katoapp.viewModel.SharingPromptViewModel
 
 @Composable
 fun SharingPromptRoute(
     navController: NavController,
-    viewModel: SearchPromptViewModel = hiltViewModel(),
-    promptOrgViewModel: PromptOrgViewModel = hiltViewModel()
+    viewModel: SharingPromptViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val promptUiState by promptOrgViewModel.uiState.collectAsState()
-
 
 
     SharingPromptScreen(
@@ -58,27 +57,20 @@ fun SharingPromptRoute(
         onCategoryToggle = { category ->
             viewModel.toggleCategory(category)
         },
-        categories = promptUiState.categories,
-        prompts = promptList,
+        categories = uiState.categories,
+        popularPrompts = uiState.popularPrompts,
+        topRatedPrompts = uiState.topRatedPrompts,
+        onPopularClick = {
+            navController.navigate("PromptSearchResultScreen/Popular")
+        },
+        onTopRatedClick = {
+            navController.navigate("PromptSearchResultScreen/Rating")
+        },
+        onPromptClick = { popularId ->
+            navController.navigate("PromptDetailScreen/$popularId")
+        }
     )
 }
-
-data class DummyPromptList(
-    val title: String,
-    val imageUrl: String,
-    val category: String,
-    val rating: String
-)
-
-val promptList = listOf(
-    DummyPromptList("Style Lukisan Klasik Eropa", "", "Gambar", "4.5"),
-    DummyPromptList("Prompt cara mengelola keuangan pribadi", "", "Video", "4.5"),
-    DummyPromptList("Midjourney Ilustrasi Fantasi ", "R.drawable.dummy_card_image", "Teks", "4.5"),
-    DummyPromptList("Style Lukisan Klasik Eropa", "R.drawable.dummy_card_image", "Gambar", "4.5"),
-    DummyPromptList("Style Lukisan Klasik Eropa", "R.drawable.dummy_card_image", "Gambar", "4.5")
-
-)
-
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -92,13 +84,17 @@ fun SharingPromptScreen(
     onQueryChange: (String) -> Unit ,
     onSearchClicked: (String) -> Unit ,
     onCategoryToggle: (String) -> Unit ,
-    prompts: List<DummyPromptList> = emptyList()
+    popularPrompts: List<Prompt>,
+    topRatedPrompts: List<Prompt>,
+    onPopularClick: () -> Unit,
+    onTopRatedClick: () -> Unit,
+    onPromptClick: (String) -> Unit
 
 ) {
+    //default selected index 0
     var selectedCategory by remember(categories) {
         mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
     }
-
 
     Column(
         modifier = modifier
@@ -108,6 +104,8 @@ fun SharingPromptScreen(
     ) {
 
         Spacer(modifier = Modifier.height(36.dp))
+
+        //Search Bar
         SearchBar(
             query = searchQuery,
             onQueryChange = onQueryChange,
@@ -123,6 +121,8 @@ fun SharingPromptScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
+
+            //main category button
             Column(
                 modifier
                     .fillMaxWidth()
@@ -154,6 +154,8 @@ fun SharingPromptScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //general category chip button
             Column(
                 modifier
                     .fillMaxWidth()
@@ -190,6 +192,8 @@ fun SharingPromptScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //list top 5 prompt popular
             Column(
                 modifier
                     .fillMaxWidth()
@@ -208,9 +212,7 @@ fun SharingPromptScreen(
                     )
 
                     TextButton(
-                        onClick = {
-                            // navigasi ke hasil pencarian
-                        },
+                        onClick = onPopularClick,
                         contentPadding = PaddingValues(vertical =0.dp),
                         modifier = Modifier.height(16.dp)
                     ) {
@@ -227,14 +229,14 @@ fun SharingPromptScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(prompts) { prompt ->
+                    items(popularPrompts) { prompt ->
                         PromptCard(
                             title = prompt.title,
                             imageUrl = prompt.imageUrl,
                             category = prompt.category,
                             rating = prompt.rating,
                             onClick = {
-                                println("di klik")
+                                onPromptClick(prompt.id)
                             }
                         )
                     }
@@ -243,6 +245,8 @@ fun SharingPromptScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //List top 5 prompt Rating
             Column(
                 modifier
                     .fillMaxWidth()
@@ -255,15 +259,13 @@ fun SharingPromptScreen(
                     horizontalArrangement = Arrangement.Absolute.SpaceBetween
                 ) {
                     Text(
-                        text = "Prompt Gambar",
+                        text = "Rating Tertinggi",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onBackground
                     )
 
                     TextButton(
-                        onClick = {
-                            // navigasi ke hasil pencarian
-                        },
+                        onClick = onTopRatedClick,
                         contentPadding = PaddingValues(vertical =0.dp),
                         modifier = Modifier.height(16.dp)
                     ) {
@@ -281,14 +283,14 @@ fun SharingPromptScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    items(prompts) { prompt ->
+                    items(topRatedPrompts) { prompt ->
                         PromptCard(
                             title = prompt.title,
                             imageUrl = prompt.imageUrl,
                             category = prompt.category,
                             rating = prompt.rating,
                             onClick = {
-                                println("di klik")
+                                onPromptClick(prompt.id)
                             }
                         )
                     }
@@ -315,7 +317,12 @@ fun SharingPromptScreenPreview() {
         onQueryChange = {},
         onSearchClicked = {},
         onCategoryToggle = {},
-        categories = listOf("Text to Text", "Text to Image", "Text to Video")
+        categories = listOf("Text to Text", "Text to Image", "Text to Video"),
+        popularPrompts = emptyList(),
+        topRatedPrompts = emptyList(),
+        onPopularClick = {},
+        onTopRatedClick = {},
+        onPromptClick = {}
     )
 }
 

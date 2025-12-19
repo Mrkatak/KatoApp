@@ -228,6 +228,41 @@ class PromptRepository @Inject constructor(
         }
     }
 
+    //function getAllPopularPrompts
+    suspend fun getAllPopularPrompts(): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .orderBy("UsegeCount", Query.Direction.DESCENDING)
+                .limit(50) //utk sementara batas 50
+                .get()
+                .await()
+
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    // function get all top rated prompts
+    suspend fun getAllTopRatedPrompts(): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .orderBy("Rating", Query.Direction.DESCENDING)
+                .limit(50) // utk sementara 50
+                .get()
+                .await()
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception){
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
     //function get prompt by main category
     suspend fun getPromptsByCategory(category: String): List<Prompt> {
         return try {
@@ -247,6 +282,7 @@ class PromptRepository @Inject constructor(
         }
     }
 
+    //map helper
     private fun mapSnapshotToPromptList(snapshot: com.google.firebase.firestore.QuerySnapshot): List<Prompt> {
         return snapshot.documents.map { doc -> mapDocumentToPrompt(doc) }
     }
@@ -254,8 +290,8 @@ class PromptRepository @Inject constructor(
     private fun mapDocumentToPrompt(doc: com.google.firebase.firestore.DocumentSnapshot): Prompt {
         fun getField(vararg keys: String): String {
             for (key in keys) {
-                val value = doc.getString(key)
-                if (!value.isNullOrEmpty()) return value
+                val value = doc.get(key)
+                if (value != null) return value.toString()
             }
             return ""
         }
@@ -270,7 +306,7 @@ class PromptRepository @Inject constructor(
             id = doc.id,
             title = getField("Judul"),
             imageUrl = getField("LinkGambar"),
-            // Cek berbagai kemungkinan nama field
+            //cek berbagai kemungkinan nama field
             category = getField("KategoriUtama", "MainKategori"),
             subCategories = getListField("KategoriUmum", "SubKategori"),
             aiModel = getField("ModelAi", "ModelAI"),

@@ -88,6 +88,12 @@ fun DashboardUserRoute(
         },
         onPromptClick = { promptId ->
             navController.navigate("PromptDetailScreen/$promptId")
+        },
+        onPopularClick = {
+            navController.navigate("PromptSearchResultScreen/Popular")
+        },
+        onTopRatedClick = {
+            navController.navigate("PromptSearchResultScreen/Rating")
         }
 
     )
@@ -104,7 +110,9 @@ fun DashboardUserScreen(
     onSearchClicked: (String) -> Unit ,
     onAddPromptClick: () -> Unit ,
     onCategoryClick: (String) -> Unit,
-    onPromptClick: (String) -> Unit
+    onPromptClick: (String) -> Unit,
+    onPopularClick: () -> Unit,
+    onTopRatedClick: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember {mutableStateOf("")}
@@ -272,9 +280,7 @@ fun DashboardUserScreen(
                     )
 
                     TextButton(
-                        onClick = {
-                            // navigasi ke hasil pencarian
-                        },
+                        onClick = onPopularClick ,
                         contentPadding = PaddingValues(vertical =0.dp),
                         modifier = Modifier.height(16.dp)
                     ) {
@@ -342,9 +348,7 @@ fun DashboardUserScreen(
                     )
 
                     TextButton(
-                        onClick = {
-                            // navigasi ke hasil pencarian
-                        },
+                        onClick = onTopRatedClick,
                         contentPadding = PaddingValues(vertical =0.dp),
                         modifier = Modifier.height(16.dp)
                     ) {
@@ -426,7 +430,9 @@ private fun View() {
         popularPrompts = emptyList(),
         topRatedPrompts = emptyList(),
         onPromptClick = {},
-        onCategoryClick = {}
+        onCategoryClick = {},
+        onPopularClick = {},
+        onTopRatedClick = {}
     )
 
 }

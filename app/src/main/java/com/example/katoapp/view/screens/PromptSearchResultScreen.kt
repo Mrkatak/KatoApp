@@ -50,6 +50,12 @@ fun PromptSearchResultRoute(
         viewModel.searchByCategory(categoryName)
     }
 
+    val displayTitle = if (categoryName == "Popular") {
+        "Prompt Populer"
+    } else {
+        CategoryMapper.getDisplayName(categoryName)
+    }
+
     PromptSearchResultScreen(
         categoryTitle = CategoryMapper.getDisplayName(categoryName),
         searchQuery = uiState.searchQuery,

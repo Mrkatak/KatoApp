@@ -41,7 +41,6 @@ class SavePromptViewModel @Inject constructor(
             if (!isRefresh) {
                 _uiState.update { it.copy(isLoading = true) }
             }
-
             val result = repository.getPrivatePrompts()
             _uiState.update {
                 it.copy(
@@ -57,7 +56,6 @@ class SavePromptViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true) }
             delay(1500)
-            // Panggil ulang data sesuai filter yang sedang aktif
             loadDataBasedOnFilter(_uiState.value.selectedFilter, isRefresh = true)
             _uiState.update { it.copy(isRefreshing = false) }
         }
@@ -65,7 +63,6 @@ class SavePromptViewModel @Inject constructor(
 
     private fun loadDataBasedOnFilter(filter: String, isRefresh: Boolean = false) {
         viewModelScope.launch {
-            // Tampilkan loading besar hanya jika bukan sedang refresh (tarik layar)
             if (!isRefresh) {
                 _uiState.update { it.copy(isLoading = true) }
             }
