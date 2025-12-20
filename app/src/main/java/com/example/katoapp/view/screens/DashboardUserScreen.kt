@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3Api::class)
+
 package com.example.katoapp.view.screens
 
 import androidx.compose.foundation.Image
@@ -23,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -169,7 +172,8 @@ fun DashboardUserScreen(
                 readOnly = true,
                 onClick = {
                     onSearchClicked("")
-                }
+                },
+
             )
         }
 
@@ -406,22 +410,9 @@ fun DashboardUserScreen(
                     }
                 }
 
-
-
             }
 
-
-
-
-
         }
-
-
-
-
-
-
-
 
     }
 

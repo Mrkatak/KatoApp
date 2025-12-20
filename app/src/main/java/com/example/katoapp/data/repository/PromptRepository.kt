@@ -1,7 +1,6 @@
 package com.example.katoapp.data.repository
 
 import android.net.Uri
-import androidx.compose.animation.core.snap
 import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.data.remote.CloudinaryHelper
 import com.example.katoapp.data.remote.ResourceCloudinary
@@ -10,9 +9,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -279,6 +276,27 @@ class PromptRepository @Inject constructor(
             e.printStackTrace()
             android.util.Log.e("PromptRepository", "Error getting category prompts: ${e.message}")
             emptyList()
+        }
+    }
+
+    suspend fun getSharedPromptCount(): Int {
+        return try {
+            val uid = auth.currentUser?.uid ?: return 0
+
+            // Kita query ke koleksi PrivatePrompt milik user
+            // Dimana field "Status" == "sharing"
+            val snapshot = firestore.collection("pengguna")
+                .document(uid)
+                .collection("PrivatePrompt")
+                .whereEqualTo("Status", "sharing")
+                .get()
+                .await()
+
+            // Kembalikan jumlah dokumen yang ditemukan
+            snapshot.size()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0
         }
     }
 

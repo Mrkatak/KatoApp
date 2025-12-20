@@ -16,7 +16,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,7 +40,7 @@ fun MainCategoryButton(
             .padding(vertical = 2.dp),
         shape = CircleShape,
         color = containerColor,
-        shadowElevation = if (isSelected) 2.dp else 2.dp
+        shadowElevation = if (isSelected) 3.dp else 3.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

@@ -20,6 +20,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,13 +30,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.katoapp.R
+import com.example.katoapp.viewModel.DashboardUserViewModel
 
 @Composable
 fun ProfileScreen(
     modifier: Modifier = Modifier,
+    viewModel: DashboardUserViewModel = hiltViewModel(),
     onLogoutClick: () -> Unit
 ) {
+    val uiState by viewModel.uiState.collectAsState()
+
     Column(
         modifier
             .fillMaxSize()
@@ -73,12 +80,12 @@ fun ProfileScreen(
             Spacer(Modifier.padding(vertical = 8.dp))
 
             Text(
-                text = "Pengguna01",
+                text = uiState.username,
                 style = MaterialTheme.typography.titleLarge
             )
             Spacer(Modifier.padding(vertical = 4.dp))
             Text(
-                text = "Pengguna01@gmail.com",
+                text = uiState.email,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -90,7 +97,7 @@ fun ProfileScreen(
                 horizontalArrangement = Arrangement.Center,
             ){
                 ProfileItem(number = "12", label = "Prompt\nDisukai")
-                ProfileItem(number = "12", label = "Prompt\nDibagikan")
+                ProfileItem(number = uiState.sharedCount.toString(), label = "Prompt\nDibagikan")
                 ProfileItem(number = "12", label = "Prompt\nDisiman")
             }
         }

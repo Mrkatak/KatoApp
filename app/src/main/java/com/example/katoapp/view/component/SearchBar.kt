@@ -1,6 +1,5 @@
 package com.example.katoapp.view.component
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -24,13 +23,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.katoapp.R
 
 @Composable
@@ -55,7 +50,7 @@ fun SearchBar(
                 spotColor = Color.Black.copy(alpha = 0.1f)
             ),
         shape = pillShape,
-        color = MaterialTheme.colorScheme.background,
+        color = MaterialTheme.colorScheme.onPrimary,
     ) {
         Box(
             modifier = Modifier.fillMaxWidth(),

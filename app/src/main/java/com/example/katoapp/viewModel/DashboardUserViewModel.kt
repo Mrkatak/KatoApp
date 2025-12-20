@@ -26,6 +26,7 @@ class DashboardUserViewModel @Inject constructor(
         loadUserData()
         loadPopularPrompts()
         loadTopRatedPrompts()
+        loadUserStats()
     }
 
     //function load user data
@@ -82,6 +83,19 @@ class DashboardUserViewModel @Inject constructor(
             val result = promptRepository.getTopRatedPrompts()
             _uiState.update {
                 it.copy(topRatedPrompts = result)
+            }
+        }
+    }
+
+    //function untuk menampilkan jumlah prompt dibagian(sharing prompt)
+    private fun loadUserStats() {
+        viewModelScope.launch {
+            // Panggil repo
+            val count = promptRepository.getSharedPromptCount()
+
+            // Update UI State
+            _uiState.update {
+                it.copy(sharedCount = count)
             }
         }
     }
