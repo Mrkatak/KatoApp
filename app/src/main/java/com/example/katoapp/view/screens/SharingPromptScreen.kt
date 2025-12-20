@@ -230,10 +230,11 @@ fun SharingPromptScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     items(popularPrompts) { prompt ->
+                        val displayCategory = CategoryMapper.getDisplayName(prompt.category)
                         PromptCard(
                             title = prompt.title,
                             imageUrl = prompt.imageUrl,
-                            category = prompt.category,
+                            category = displayCategory,
                             rating = prompt.rating,
                             onClick = {
                                 onPromptClick(prompt.id)
@@ -284,10 +285,11 @@ fun SharingPromptScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     items(topRatedPrompts) { prompt ->
+                        val displayCategory = CategoryMapper.getDisplayName(prompt.category)
                         PromptCard(
                             title = prompt.title,
                             imageUrl = prompt.imageUrl,
-                            category = prompt.category,
+                            category = displayCategory,
                             rating = prompt.rating,
                             onClick = {
                                 onPromptClick(prompt.id)

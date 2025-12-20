@@ -16,17 +16,14 @@ import javax.inject.Inject
 @HiltViewModel
 class PromptDetailViewModel @Inject constructor(
     private val repository: PromptRepository ,
-    savedStateHandle: SavedStateHandle // Ini untuk menangkap parameter navigasi
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PromptDetailUiState())
     val uiState: StateFlow<PromptDetailUiState> = _uiState.asStateFlow()
 
     init {
-        // Ambil "promptId" yang dikirim lewat navigasi
-        // Pastikan nama key "promptId" sama dengan di NavHost
         val promptId: String? = savedStateHandle["promptId"]
-
         if (promptId != null) {
             loadPromptDetail(promptId)
         } else {
@@ -34,11 +31,11 @@ class PromptDetailViewModel @Inject constructor(
         }
     }
 
+    //function load prompt detail
     private fun loadPromptDetail(id: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val result = repository.getPromptById(id)
-
             if (result != null) {
                 _uiState.update { it.copy(isLoading = false, prompt = result) }
             } else {

@@ -70,7 +70,6 @@ class DashboardUserViewModel @Inject constructor(
     private fun loadPopularPrompts() {
         viewModelScope.launch {
             val result = promptRepository.getPopularPrompts()
-
             _uiState.update {
                 it.copy(popularPrompts = result)
             }

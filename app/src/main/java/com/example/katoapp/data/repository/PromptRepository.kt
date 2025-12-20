@@ -90,8 +90,8 @@ class PromptRepository @Inject constructor(
                 "UserId" to currentUser.uid,
                 "UserEmail" to (currentUser.email ?: ""),
                 "Tanggal" to FieldValue.serverTimestamp(),
-                "Rating" to "New",
-                "UsegeCount" to 0
+                "Rating" to "0.0",
+                "UsageCount" to 0
             )
 
             val batch = firestore.batch()
@@ -200,7 +200,7 @@ class PromptRepository @Inject constructor(
             val snapshot = firestore.collection("admin")
                 .document(adminDocId)
                 .collection("SharingPrompt")
-                .orderBy("UsegeCount", Query.Direction.DESCENDING)
+                .orderBy("UsageCount", Query.Direction.DESCENDING)
                 .limit(5)
                 .get()
                 .await()
@@ -234,7 +234,7 @@ class PromptRepository @Inject constructor(
             val snapshot = firestore.collection("admin")
                 .document(adminDocId)
                 .collection("SharingPrompt")
-                .orderBy("UsegeCount", Query.Direction.DESCENDING)
+                .orderBy("UsageCount", Query.Direction.DESCENDING)
                 .limit(50) //utk sementara batas 50
                 .get()
                 .await()
@@ -306,7 +306,6 @@ class PromptRepository @Inject constructor(
             id = doc.id,
             title = getField("Judul"),
             imageUrl = getField("LinkGambar"),
-            //cek berbagai kemungkinan nama field
             category = getField("KategoriUtama", "MainKategori"),
             subCategories = getListField("KategoriUmum", "SubKategori"),
             aiModel = getField("ModelAi", "ModelAI"),

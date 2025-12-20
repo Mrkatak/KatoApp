@@ -126,6 +126,7 @@ fun DashboardUserScreen(
                 .fillMaxWidth()
                 .background(color = MaterialTheme.colorScheme.background)
         ) {
+            //user profile
             Row(
                 modifier
                     .fillMaxWidth()
@@ -157,6 +158,8 @@ fun DashboardUserScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //search bar
             SearchBar(
                 modifier = Modifier
                     .padding(horizontal = 26.dp),
@@ -179,9 +182,11 @@ fun DashboardUserScreen(
                 .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier.height(16.dp))
+
+            //Carousel / iklan
             Carousel()
 
+            //button tambah prompt
             Column(
                 modifier
                     .fillMaxWidth()
@@ -229,6 +234,8 @@ fun DashboardUserScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //Main Category
             Column(
                 modifier
                     .fillMaxWidth()
@@ -262,6 +269,8 @@ fun DashboardUserScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //top 5 prompt popular
             Column(
                 modifier
                     .fillMaxWidth()
@@ -330,6 +339,8 @@ fun DashboardUserScreen(
             }
 
             Spacer(modifier.height(16.dp))
+
+            //top 5 prompt rating
             Column(
                 modifier
                     .fillMaxWidth()
@@ -361,7 +372,7 @@ fun DashboardUserScreen(
                 }
 
                 Spacer(modifier.height(8.dp))
-                if (popularPrompts.isEmpty()) {
+                if (topRatedPrompts.isEmpty()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

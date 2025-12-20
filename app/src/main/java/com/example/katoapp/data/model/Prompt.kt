@@ -34,7 +34,7 @@ data class Prompt(
     val status: String = "",
 
     @get:PropertyName("Rating")
-    val rating: String = "New",
+    val rating: String = "0.0",
 
     @get:PropertyName("UsageCount")
     val usageCount: Int = 0,

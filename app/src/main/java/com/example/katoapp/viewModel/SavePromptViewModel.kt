@@ -23,11 +23,12 @@ class SavePromptViewModel @Inject constructor(
 
     init {
         fetchPrivatePrompts()
-    }
-
-    init {
         loadDataBasedOnFilter("Private")
     }
+
+//    init {
+//        loadDataBasedOnFilter("Private")
+//    }
 
     //function filter data
     fun onFilterChanged(filter: String) {
