@@ -24,8 +24,7 @@ class DashboardUserViewModel @Inject constructor(
 
     init {
         loadUserData()
-        loadPopularPrompts()
-        loadTopRatedPrompts()
+        loadTopFivePrompts()
         loadUserStats()
     }
 
@@ -67,22 +66,17 @@ class DashboardUserViewModel @Inject constructor(
         }
     }
 
-    //fun get popular prompt (5)
-    private fun loadPopularPrompts() {
+    //fun getTopFivePrompts
+    private fun loadTopFivePrompts() {
         viewModelScope.launch {
-            val result = promptRepository.getPopularPrompts()
-            _uiState.update {
-                it.copy(popularPrompts = result)
-            }
-        }
-    }
+            val popularResult = promptRepository.getPopularPrompts()
+            val topRatedResult = promptRepository.getTopRatedPrompts()
 
-    //function get top rated prompt (5)
-    private fun loadTopRatedPrompts() {
-        viewModelScope.launch {
-            val result = promptRepository.getTopRatedPrompts()
             _uiState.update {
-                it.copy(topRatedPrompts = result)
+                it.copy(
+                    popularPrompts = popularResult,
+                    topRatedPrompts = topRatedResult
+                )
             }
         }
     }

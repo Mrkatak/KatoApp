@@ -32,10 +32,9 @@ import com.example.katoapp.view.component.GeneralCategoryButton
 import com.example.katoapp.view.component.MainCategoryButton
 import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.view.component.SearchBar
-import com.example.katoapp.viewModel.PromptOrgViewModel
-import com.example.katoapp.viewModel.SearchPromptViewModel
 import com.example.katoapp.viewModel.SharingPromptViewModel
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SharingPromptRoute(
     navController: NavController,
@@ -46,55 +45,75 @@ fun SharingPromptRoute(
 
     SharingPromptScreen(
         searchQuery = uiState.searchQuery,
+        // data list
+        categories = uiState.categories,
         generalCategories = uiState.generalCategories,
+        popularPrompts = uiState.popularPrompts,
+        topRatedPrompts = uiState.topRatedPrompts,
+        //data seleksi
+        selectedMainCategory = uiState.selectedMainCategory,
         selectedCategories = uiState.selectedCategories,
+
         isLoading = uiState.isLoading,
         onQueryChange = { viewModel.onQueryChange(it) },
-        onSearchClicked = {
-            //function search
-            println("Searching: ${uiState.searchQuery}")
+
+        onMainCategoryClick = { dbValue ->
+            viewModel.setMainCategory(dbValue)
         },
         onCategoryToggle = { category ->
             viewModel.toggleCategory(category)
         },
-        categories = uiState.categories,
-        popularPrompts = uiState.popularPrompts,
-        topRatedPrompts = uiState.topRatedPrompts,
-        onPopularClick = {
-            navController.navigate("PromptSearchResultScreen/Popular")
+        //search
+        onSearchClicked = { query ->
+            // Validasi: Minimal ada teks ATAU salah satu kategori terpilih
+            if (query.isNotEmpty() || uiState.selectedCategories.isNotEmpty() || uiState.selectedMainCategory.isNotEmpty()) {
+
+                // Format Navigasi Khusus: SEARCH:query|mainCat|filter1,filter2
+                // Kita gabungkan semua filter menjadi satu string parameter
+                val cleanQuery = query.trim()
+                val mainCat = uiState.selectedMainCategory.ifEmpty { "All" }
+                val filters = uiState.selectedCategories.joinToString(",")
+
+                // String ajaib ini nanti akan di-parsing oleh SearchPromptViewModel di halaman hasil
+                val searchParam = "SEARCH:$cleanQuery|$mainCat|$filters"
+
+                navController.navigate("PromptSearchResultScreen/$searchParam")
+            }
         },
-        onTopRatedClick = {
-            navController.navigate("PromptSearchResultScreen/Rating")
-        },
-        onPromptClick = { popularId ->
-            navController.navigate("PromptDetailScreen/$popularId")
-        }
+        //navigasi
+        onPopularClick = { navController.navigate("PromptSearchResultScreen/Popular") },
+        onTopRatedClick = { navController.navigate("PromptSearchResultScreen/TopRated") },
+        onPromptClick = { id -> navController.navigate("PromptDetailScreen/$id") },
+        onBackClick = { navController.popBackStack() }
     )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SharingPromptScreen(
-    modifier: Modifier = Modifier ,
-    searchQuery: String ,
-    generalCategories: List<String> ,
-    selectedCategories: List<String> ,
-    isLoading: Boolean ,
-    categories: List<String> ,
-    onQueryChange: (String) -> Unit ,
-    onSearchClicked: (String) -> Unit ,
-    onCategoryToggle: (String) -> Unit ,
+    searchQuery: String,
+    categories: List<String>,
+    generalCategories: List<String>,
+    selectedMainCategory: String,
+    selectedCategories: List<String>,
     popularPrompts: List<Prompt>,
     topRatedPrompts: List<Prompt>,
+    isLoading: Boolean,
+    onQueryChange: (String) -> Unit,
+    onSearchClicked: (String) -> Unit,
+    onMainCategoryClick: (String) -> Unit,
+    onCategoryToggle: (String) -> Unit,
     onPopularClick: () -> Unit,
     onTopRatedClick: () -> Unit,
-    onPromptClick: (String) -> Unit
+    onPromptClick: (String) -> Unit,
+    onBackClick: () -> Unit,
+    modifier: Modifier = Modifier
 
 ) {
     //default selected index 0
-    var selectedCategory by remember(categories) {
-        mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
-    }
+//    var selectedCategory by remember(categories) {
+//        mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
+//    }
 
     Column(
         modifier = modifier
@@ -121,7 +140,6 @@ fun SharingPromptScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-
             //main category button
             Column(
                 modifier
@@ -145,8 +163,8 @@ fun SharingPromptScreen(
                         MainCategoryButton(
                             text = CategoryMapper.getDisplayName(dbValue),
                             icon = CategoryMapper.getIcon(dbValue),
-                            isSelected = (selectedCategory == dbValue),
-                            onClick = { selectedCategory = dbValue}
+                            isSelected = (selectedMainCategory == dbValue),
+                            onClick = { onMainCategoryClick(dbValue)}
                         )
 
                     }
@@ -324,7 +342,10 @@ fun SharingPromptScreenPreview() {
         topRatedPrompts = emptyList(),
         onPopularClick = {},
         onTopRatedClick = {},
-        onPromptClick = {}
+        onPromptClick = {},
+        onBackClick = {},
+        onMainCategoryClick = {},
+        selectedMainCategory = "Teks"
     )
 }
 

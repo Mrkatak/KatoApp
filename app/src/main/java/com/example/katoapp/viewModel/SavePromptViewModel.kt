@@ -26,10 +26,6 @@ class SavePromptViewModel @Inject constructor(
         loadDataBasedOnFilter("Private")
     }
 
-//    init {
-//        loadDataBasedOnFilter("Private")
-//    }
-
     //function filter data
     fun onFilterChanged(filter: String) {
         _uiState.update { it.copy(selectedFilter = filter) }

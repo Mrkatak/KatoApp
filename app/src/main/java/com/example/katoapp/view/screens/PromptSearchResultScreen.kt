@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,14 +51,38 @@ fun PromptSearchResultRoute(
         viewModel.searchByCategory(categoryName)
     }
 
-    val displayTitle = if (categoryName == "Popular") {
-        "Prompt Populer"
-    } else {
-        CategoryMapper.getDisplayName(categoryName)
+//    val displayTitle = if (categoryName == "Popular") {
+//        "Prompt Populer"
+//    } else {
+//        CategoryMapper.getDisplayName(categoryName)
+//    }
+
+    val displayTitle = remember(categoryName) {
+        when {
+            // Jika formatnya SEARCH:query|MainCat|Filters
+            categoryName.startsWith("SEARCH:") -> {
+                val rawContent = categoryName.removePrefix("SEARCH:")
+                val parts = rawContent.split("|")
+                // Index 1 adalah Main Category (misal: "Text to Image")
+                val mainCategoryRaw = parts.getOrNull(1) ?: "All"
+
+                if (mainCategoryRaw != "All" && mainCategoryRaw.isNotEmpty()) {
+                    CategoryMapper.getDisplayName(mainCategoryRaw)
+                } else {
+                    "Hasil Pencarian"
+                }
+            }
+            // Jika kategori preset
+            categoryName == "Popular" -> "Prompt Populer"
+            categoryName == "Rating" -> "Rating Tertinggi"
+            // Jika kategori biasa (diklik dari dashboard)
+            else -> CategoryMapper.getDisplayName(categoryName)
+        }
     }
 
     PromptSearchResultScreen(
-        categoryTitle = CategoryMapper.getDisplayName(categoryName),
+//        categoryTitle = CategoryMapper.getDisplayName(categoryName),
+        categoryTitle = displayTitle,
         searchQuery = uiState.searchQuery,
         isLoading = uiState.isLoading,
         prompts = uiState.searchResults,

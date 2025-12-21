@@ -64,7 +64,6 @@ fun PromptCard(
                 model = imageUrl,
                 contentDescription = title,
                 contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.dummy_card_image),
                 error = painterResource(R.drawable.ic_image),
                 modifier = Modifier.fillMaxSize()
             )
@@ -162,7 +161,7 @@ fun PromptCardPreview() {
         Box(modifier = Modifier.padding(16.dp)) {
             PromptCard(
                 title = "Prompt mengatasi code error dan penjelasan",
-                imageUrl = "R.drawable.dummy_card_image",
+                imageUrl = "",
                 category = "Gambar",
                 rating = "4.5",
                 onClick = {}

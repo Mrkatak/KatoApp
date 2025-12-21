@@ -76,7 +76,12 @@ class AuthViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true , errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true ,
+                    errorMessage = null
+                )
+            }
             try {
                 repository.register(username , email , pass)
                 _uiState.update {
@@ -87,7 +92,12 @@ class AuthViewModel @Inject constructor(
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false , errorMessage = e.message) }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false ,
+                        errorMessage = e.message
+                    )
+                }
             }
         }
     }
@@ -99,7 +109,12 @@ class AuthViewModel @Inject constructor(
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true , errorMessage = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true ,
+                    errorMessage = null
+                )
+            }
             try {
                 repository.resetPassword(email)
                 _uiState.update {

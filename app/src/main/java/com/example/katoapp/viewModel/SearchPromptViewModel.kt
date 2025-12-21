@@ -44,27 +44,73 @@ class SearchPromptViewModel @Inject constructor(
         _uiState.update { it.copy(searchQuery = newQuery) }
     }
 
-    //toggle filter
-    fun toggleCategory(category: String) {
-        _uiState.update { currentState ->
-            val currentList = currentState.selectedCategories.toMutableList()
-            if (currentList.contains(category)) {
-                currentList.remove(category)
-            } else {
-                currentList.add(category)
-            }
-            currentState.copy(selectedCategories = currentList)
-        }
-    }
+//    fun selectCategory(category: String) {
+//        _uiState.update { currentState ->
+//            // Jika diklik lagi, batalkan pilihan (Deselect)
+//            val newSelection = if (currentState.selectedCategories.contains(category)) {
+//                emptyList()
+//            } else {
+//                listOf(category) // Hanya satu item dalam list
+//            }
+//            currentState.copy(
+//                selectedCategories = newSelection
+//            )
+//        }
+//    }
+//
+//    //toggle filter
+//    fun toggleCategory(category: String) {
+//        _uiState.update { currentState ->
+//            val currentList = currentState.selectedCategories.toMutableList()
+//            if (currentList.contains(category)) {
+//                currentList.remove(category)
+//            } else {
+//                currentList.add(category)
+//            }
+//            currentState.copy(
+//                selectedCategories = currentList
+//            )
+//        }
+//    }
 
     //fun search by main category
-    fun searchByCategory(category: String) {
+    fun searchByCategory(param: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, searchResults = emptyList()) }
-            val results = when (category) {
-                "Popular" -> repository.getAllPopularPrompts()
-                "Rating" -> repository.getAllTopRatedPrompts()
-                else -> repository.getPromptsByCategory(category)
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    searchResults = emptyList()
+                )
+            }
+            val results = when {
+                //format search
+                param.startsWith("SEARCH:") -> {
+                    val rawContent = param.removePrefix("SEARCH:")
+                    val parts = rawContent.split("|")
+                    val queryText = parts.getOrNull(0) ?: ""
+                    val mainCategory = parts.getOrNull(1) ?: "All"
+                    val filtersString = parts.getOrNull(2) ?: ""
+                    val filters = if (filtersString.isNotEmpty()) filtersString.split(",") else emptyList()
+
+                    // update search query
+                    _uiState.update {
+                        it.copy(
+                            searchQuery = queryText
+                        )
+                    }
+                    //cari berdasarkan judul & subCategory
+                    var searchRes = repository.searchPrompts(queryText, filters)
+
+                    //filter tambahan utk mainCategory
+                    if (mainCategory != "All" && mainCategory.isNotEmpty()) {
+                        searchRes = searchRes.filter { it.category == mainCategory }
+                    }
+                    searchRes
+                }
+                //handle button lainnya
+                param == "Popular" -> repository.getAllPopularPrompts()
+                param == "Rating" -> repository.getAllTopRatedPrompts()
+                else -> repository.getPromptsByCategory(param)
             }
 
             _uiState.update {
@@ -75,4 +121,9 @@ class SearchPromptViewModel @Inject constructor(
             }
         }
     }
+
+
+
+
+
 }

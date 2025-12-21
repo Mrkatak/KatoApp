@@ -31,7 +31,7 @@ class CloudinaryHelper @Inject constructor(
             config["secure"] = "true"
             MediaManager.init(context, config)
         } catch (e: Exception) {
-
+            //error handling
         }
     }
 
@@ -95,49 +95,7 @@ class CloudinaryHelper @Inject constructor(
 
 
     // function Upload Gambar tanpa kompres
-    //mengembalikan url gambar
-//    fun uploadImage(imageUri: Uri): Flow<ResourceCloudinary<String>> = callbackFlow {
-//        initMediaManager()
-//        trySend(ResourceCloudinary.Loading)
-//        val requestId = MediaManager.get().upload(imageUri)
-//            .unsigned(myUploadPreset)
-//            .option("resource_type", "image")
-//            .callback(object : UploadCallback {
-//
-//                //saat upload dimulai
-//                override fun onStart(requestId: String) {
-//                }
-//                //saat proses berjalan
-//                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
-//                    // val progress = (bytes.toDouble() / totalBytes) * 100
-//                }
-//                //upload success
-//                override fun onSuccess(requestId: String, resultData: Map<*, *>) {
-//                    //get url https
-//                    val secureUrl = resultData["secure_url"] as? String ?: ""
-//                    if (secureUrl.isNotEmpty()) {
-//                        trySend(ResourceCloudinary.Success(secureUrl))
-//                    } else {
-//                        trySend(ResourceCloudinary.Error("Gagal mendapatkan URL gambar"))
-//                    }
-//                    close() //tutup flow
-//                }
-//                //upload gagal
-//                override fun onError(requestId: String, error: ErrorInfo) {
-//                    trySend(ResourceCloudinary.Error("Upload Gagal: ${error.description}"))
-//                    close()
-//                }
-//                override fun onReschedule(requestId: String, error: ErrorInfo) {
-//                }
-//            })
-//            .dispatch()
-//
-//        awaitClose {
-//            MediaManager.get().cancelRequest(requestId)
-//        }
-//    }.flowOn(Dispatchers.IO)
-
-
+    // fun uploadImage()
 }
 
 //class Helper sebagai kamus error

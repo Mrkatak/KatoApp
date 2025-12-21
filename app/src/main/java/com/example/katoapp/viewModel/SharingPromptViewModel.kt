@@ -22,9 +22,7 @@ class SharingPromptViewModel @Inject constructor(
 
     init {
         fetchData()
-        fetchGeneralCategories()
-        loadPopularPrompts()
-        loadTopRatedPrompts()
+        loadTopFivePrompts()
     }
 
     //get category
@@ -35,26 +33,14 @@ class SharingPromptViewModel @Inject constructor(
             val mainCats = promptRepository.getMainCategories()
             //get general category
             val generalCats = promptRepository.getGeneralCategories()
+            val defaultMainCat = if (mainCats.isNotEmpty()) mainCats[0] else ""
 
             _uiState.update {
                 it.copy(
                     isLoading = false,
                     categories = mainCats,
-                    generalCategories = generalCats
-                )
-            }
-        }
-    }
-
-    //get general categories
-    private fun fetchGeneralCategories() {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            val categories = promptRepository.getGeneralCategories()
-            _uiState.update {
-                it.copy(
-                    isLoading = false,
-                    generalCategories = categories
+                    generalCategories = generalCats,
+                    selectedMainCategory = defaultMainCat
                 )
             }
         }
@@ -74,28 +60,35 @@ class SharingPromptViewModel @Inject constructor(
             } else {
                 currentList.add(category)
             }
-            currentState.copy(selectedCategories = currentList)
+            currentState.copy(
+                selectedCategories = currentList
+            )
         }
     }
 
-    //fun get popular prompt (5)
-    private fun loadPopularPrompts() {
+    //get top 5 prompt
+    private fun loadTopFivePrompts() {
         viewModelScope.launch {
-            val result = promptRepository.getPopularPrompts()
+            val popularResult = promptRepository.getPopularPrompts()
+            val topRatedResult = promptRepository.getTopRatedPrompts()
 
             _uiState.update {
-                it.copy(popularPrompts = result)
+                it.copy(
+                    popularPrompts = popularResult,
+                    topRatedPrompts = topRatedResult
+                )
             }
         }
     }
 
-    //function get top rated prompt (5)
-    private fun loadTopRatedPrompts() {
-        viewModelScope.launch {
-            val result = promptRepository.getTopRatedPrompts()
-            _uiState.update {
-                it.copy(topRatedPrompts = result)
-            }
+    //control MainCategory
+    fun setMainCategory(category: String) {
+        _uiState.update { currentState ->
+            //klik lagi utk batalkan
+//            val newSelection = if (currentState.selectedMainCategory == category) "" else category
+            currentState.copy(
+                selectedMainCategory = category
+            )
         }
     }
 }

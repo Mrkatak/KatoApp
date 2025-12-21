@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.math.min
 
 class PromptRepository @Inject constructor(
     private val firestore: FirebaseFirestore ,
@@ -299,6 +300,88 @@ class PromptRepository @Inject constructor(
             0
         }
     }
+
+    //function search prompt
+    suspend fun searchPrompts(query: String, filters: List<String>): List<Prompt> {
+        return try {
+            val collectionRef = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+            //get data
+            val snapshot = collectionRef
+                .orderBy("Tanggal", Query.Direction.DESCENDING)
+                .limit(100) //ambil 100 terbaru
+                .get()
+                .await()
+
+            var results = mapSnapshotToPromptList(snapshot)
+            if (query.isNotEmpty()) {
+                val cleanQuery = query.trim().lowercase() //huruf kecil
+
+                results = results.filter { prompt ->
+                    val title = prompt.title.lowercase()
+                    val isMatch = title.contains(cleanQuery)//Cek Case Insensitive
+                    //cek typo fuzzy
+                    val isFuzzy = if (!isMatch && cleanQuery.length > 3) {
+                        hasTypoMatch(title, cleanQuery)
+                    } else {
+                        false
+                    }
+
+                    isMatch || isFuzzy
+                }
+            }
+
+            if (filters.isNotEmpty()) { // filter kategori
+                results = results.filter { prompt ->
+                    prompt.subCategories.any { it in filters }
+                }
+            }
+
+            results
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    //algoritma deteksi typo
+    private fun hasTypoMatch(text: String, query: String): Boolean {
+        // cek kata dalam judul
+        val words = text.split(" ")
+        for (word in words) {
+            if (calculateLevenshteinDistance(word, query) <= 2) { // Jika perbedaan huruf antar judul dan query <=2
+                return true
+            }
+        }
+        return false
+    }
+
+    //looping utk hitung jarak levenshtein
+    private fun calculateLevenshteinDistance(s1: String, s2: String): Int {
+        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
+
+        for (i in 0..s1.length) {
+            for (j in 0..s2.length) {
+                if (i == 0) {
+                    dp[i][j] = j
+                } else if (j == 0) {
+                    dp[i][j] = i
+                } else {
+                    dp[i][j] = min(
+                        dp[i - 1][j - 1] + costOfSubstitution(s1[i - 1], s2[j - 1]),
+                        min(dp[i - 1][j] + 1, dp[i][j - 1] + 1)
+                    )
+                }
+            }
+        }
+        return dp[s1.length][s2.length]
+    }
+
+    private fun costOfSubstitution(a: Char, b: Char): Int {
+        return if (a == b) 0 else 1
+    }
+
 
     //map helper
     private fun mapSnapshotToPromptList(snapshot: com.google.firebase.firestore.QuerySnapshot): List<Prompt> {
