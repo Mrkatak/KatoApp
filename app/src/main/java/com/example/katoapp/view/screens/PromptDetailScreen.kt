@@ -1,11 +1,7 @@
 package com.example.katoapp.view.screens
 
-import android.graphics.Paint
-import android.widget.Space
 import android.widget.Toast
-import androidx.compose.animation.animateBounds
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,14 +11,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountBox
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,20 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -66,6 +53,13 @@ fun PromptDetailRoute(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    //side effect utk toast bookmark
+    LaunchedEffect(uiState.bookmarkMessage) {
+        uiState.bookmarkMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     // Handle Loading & Error
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -79,10 +73,14 @@ fun PromptDetailRoute(
         //jika prompt tidak != null tampilkan Screen
         PromptDetailScreen(
             data = uiState.prompt!!,
+            isOwner = uiState.isOwner,
+            isSaved = uiState.isSaved,
+            onEditClick = {
+                navController.navigate("PromptEditScreen")
+            },
             onBackClick = { navController.popBackStack() },
             onSaveClick = {
-                // nanti
-                Toast.makeText(context, "Fitur Simpan (Bookmark) segera hadir!", Toast.LENGTH_SHORT).show()
+                viewModel.toggleBookmark()
             },
             onCopyClick = { text ->
                 // nanti logic copy
@@ -101,6 +99,9 @@ fun PromptDetailRoute(
 fun PromptDetailScreen(
     modifier : Modifier = Modifier ,
     data: Prompt,
+    isOwner: Boolean,
+    isSaved: Boolean,
+    onEditClick: () -> Unit,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     onCopyClick: (String) -> Unit,
@@ -138,17 +139,19 @@ fun PromptDetailScreen(
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = {
-                            //nanti navigasi ke edit prompt screen
+                    if (data.status == "private" && isOwner) {
+                        IconButton(
+                            onClick = {
+                                //nanti navigasi ke edit prompt screen
+                            }
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_edit),
+                                contentDescription = "Edit",
+                                tint = MaterialTheme.colorScheme.onBackground,
+                                modifier = Modifier.size(24.dp)
+                            )
                         }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_edit),
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier.size(24.dp)
-                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -285,6 +288,16 @@ fun PromptDetailScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            if (!isOwner && data.username.isNotEmpty()) {
+                Text(
+                    text = "Dibuat oleh: ${data.username}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.align(Alignment.Start)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             //kategori umum
             if (data.subCategories.isNotEmpty()) {
                 Column(
@@ -357,29 +370,37 @@ fun PromptDetailScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 // tombol simpan
-                Button(
-                    onClick = onSaveClick,
-                    modifier = Modifier
-                        .weight(1f).
-                        height(40.dp),
-                    shape = RoundedCornerShape(100.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_save) ,
-                        contentDescription = "ic save",
+                if (!isOwner) {
+                    val buttonColor = if (isSaved) MaterialTheme.colorScheme.errorContainer else MaterialTheme.colorScheme.primary
+                    val contentColor = if (isSaved) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onPrimary
+                    val buttonText = if (isSaved) "Unsave" else "Simpan"
+
+                    Button(
+                        onClick = onSaveClick,
                         modifier = Modifier
-                            .size(20.dp),
-                        tint = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Simpan" ,
-                        style = MaterialTheme.typography.labelLarge ,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+                            .weight(1f).
+                            height(40.dp),
+                        shape = RoundedCornerShape(100.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = buttonColor,
+                            contentColor = contentColor
+                        )
+                    ) {
+                        Icon(
+                            painter = if (isSaved) painterResource(R.drawable.ic_help)
+                                        else painterResource(R.drawable.ic_save),
+                            contentDescription = "ic save",
+                            modifier = Modifier
+                                .size(20.dp),
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = buttonText ,
+                            style = MaterialTheme.typography.labelLarge ,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
                 }
 
                 //tombol salin prompt
@@ -501,15 +522,17 @@ fun PromptDetailScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             //tombol report
-            TextButton(
-                onClick = onReportClick
-            ) {
-                Text(
-                    text = "Laporkan prompt",
-                    color = MaterialTheme.colorScheme.secondary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textDecoration = TextDecoration.Underline
-                )
+            if (!isOwner) {
+                TextButton(
+                    onClick = onReportClick
+                ) {
+                    Text(
+                        text = "Laporkan prompt",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textDecoration = TextDecoration.Underline
+                    )
+                }
             }
             Spacer(modifier = Modifier.height(32.dp))
 
@@ -602,9 +625,12 @@ fun PromptDetailScreenPreview() {
 
     PromptDetailScreen(
         data = dummyPrompt,
+        isOwner = false,
         onBackClick = {},
         onSaveClick = {},
         onCopyClick = {},
-        onReportClick = {}
+        onReportClick = {},
+        isSaved = false,
+        onEditClick = {}
     )
 }

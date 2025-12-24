@@ -9,6 +9,12 @@ data class Prompt(
     @DocumentId
     val id: String = "",
 
+    @get:PropertyName("UserId")
+    val userId: String = "",
+
+    @get:PropertyName("Username")
+    val username: String = "",
+
     @get:PropertyName("Judul")
     val title: String = "",
 

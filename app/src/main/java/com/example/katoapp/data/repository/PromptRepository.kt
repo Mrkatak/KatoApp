@@ -23,6 +23,10 @@ class PromptRepository @Inject constructor(
 
     private val adminDocId = "R7LaZTfFIzlePgo8crgK"
 
+    fun getCurrentUserUid(): String? {
+        return auth.currentUser?.uid
+    }
+
     //function get kategori utama
     suspend fun getMainCategories(): List<String> {
         return try {
@@ -151,6 +155,42 @@ class PromptRepository @Inject constructor(
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()
+        }
+    }
+
+    //function get saved prompt
+    suspend fun getSavedPrompts(): List<Prompt> {
+        return try {
+            val uid = auth.currentUser?.uid ?: return emptyList()
+
+            val snapshot = firestore.collection("pengguna")
+                .document(uid)
+                .collection("SavedPrompt")
+                .orderBy("Tanggal", Query.Direction.DESCENDING) // Urutkan dari kapan user menyimpannya
+                .get()
+                .await()
+
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    //function check if prompt is saved
+    suspend fun isPromptSaved(promptId: String): Boolean {
+        return try {
+            val uid = auth.currentUser?.uid ?: return false
+            val doc = firestore.collection("pengguna")
+                .document(uid)
+                .collection("SavedPrompt")
+                .document(promptId)
+                .get()
+                .await()
+
+            doc.exists()
+        } catch (e: Exception) {
+            false
         }
     }
 
@@ -382,6 +422,37 @@ class PromptRepository @Inject constructor(
         return if (a == b) 0 else 1
     }
 
+    //function toggle bookmark
+    suspend fun toggleBookmark(prompt: Prompt): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val uid = auth.currentUser?.uid ?: throw Exception("User belum login")
+
+                val savedRef = firestore.collection("pengguna")
+                    .document(uid)
+                    .collection("SavedPrompt") // Collection Khusus Bookmark
+                    .document(prompt.id) // Pakai ID yang sama dengan aslinya
+
+                val snapshot = savedRef.get().await()
+
+                if (snapshot.exists()) {
+                    // KASUS 1: Sudah disimpan -> HAPUS (Unbookmark)
+                    savedRef.delete().await()
+                    "Dihapus dari simpanan"
+                } else {
+                    // KASUS 2: Belum disimpan -> SIMPAN (Copy Data)
+                    // Kita simpan objek prompt apa adanya
+                    savedRef.set(prompt).await()
+                    "Berhasil disimpan"
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                "Gagal mengubah status simpan"
+            }
+        }
+    }
+
+
 
     //map helper
     private fun mapSnapshotToPromptList(snapshot: com.google.firebase.firestore.QuerySnapshot): List<Prompt> {
@@ -415,7 +486,9 @@ class PromptRepository @Inject constructor(
             rating = getField("Rating").ifEmpty { "New" },
             status = getField("Status"),
             createdAt = doc.getDate("Tanggal"),
-            usageCount = doc.getLong("UsageCount")?.toInt() ?: 0
+            usageCount = doc.getLong("UsageCount")?.toInt() ?: 0,
+            userId = getField("UserId"),
+            username = getField("Username", "UserEmail")
         )
     }
 

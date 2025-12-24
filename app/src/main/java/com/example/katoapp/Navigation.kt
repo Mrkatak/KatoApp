@@ -26,6 +26,7 @@ import com.example.katoapp.view.screens.DashboardUserRoute
 import com.example.katoapp.view.screens.LoginRoute
 import com.example.katoapp.view.screens.ProfileScreen
 import com.example.katoapp.view.screens.PromptDetailRoute
+import com.example.katoapp.view.screens.PromptEditRoute
 import com.example.katoapp.view.screens.PromptSearchResultRoute
 import com.example.katoapp.view.screens.RegisterRoute
 import com.example.katoapp.view.screens.ResetPassRoute
@@ -95,6 +96,12 @@ fun Navigation(
             )
         ) {
             PromptDetailRoute(
+                navController = rootNavController
+            )
+        }
+
+        composable("PromptEditScreen") {
+            PromptEditRoute(
                 navController = rootNavController
             )
         }

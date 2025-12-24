@@ -66,9 +66,9 @@ class SavePromptViewModel @Inject constructor(
 
             // Panggil fungsi Repository yang sesuai
             val result = when (filter) {
-                "Private" -> repository.getPrivatePrompts() // Ambil dari koleksi pribadi user
-                "Sharing" -> repository.getSharingPrompts() // Ambil dari koleksi publik (SharingPrompt)
-                "Simpan" -> emptyList() // Belum ada fitur bookmark
+                "Private" -> repository.getPrivatePrompts()
+                "Sharing" -> repository.getSharingPrompts()
+                "Simpan" -> repository.getSavedPrompts()
                 else -> emptyList()
             }
 

@@ -3,9 +3,11 @@ package com.example.katoapp.viewModel
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.savedstate.savedState
 import com.example.katoapp.data.repository.PromptRepository
 import com.example.katoapp.viewModel.state.PromptDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,10 +38,42 @@ class PromptDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             val result = repository.getPromptById(id)
+            val savedStatus = repository.isPromptSaved(id)
+
             if (result != null) {
-                _uiState.update { it.copy(isLoading = false, prompt = result) }
+                val currentUid = repository.getCurrentUserUid() //cek current user
+                val isMine = currentUid != null && currentUid == result.userId // bandingkan dengan ID pembuat prompt
+
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        prompt = result,
+                        isOwner = isMine,
+                        isSaved =  savedStatus
+                    )
+                }
             } else {
-                _uiState.update { it.copy(isLoading = false, error = "Data tidak ditemukan") }
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = "Data tidak ditemukan"
+                    )
+                }
+            }
+        }
+    }
+
+    //function toggle bookmark
+    fun toggleBookmark() {
+        viewModelScope.launch {
+            val currentPrompt = _uiState.value.prompt
+            if (currentPrompt != null) {
+                val oldStatus = _uiState.value.isSaved
+                _uiState.update { it.copy(isSaved = !oldStatus) }
+                val message = repository.toggleBookmark(currentPrompt)
+                _uiState.update { it.copy(bookmarkMessage = message) } //update message
+                delay(100)
+                _uiState.update { it.copy(bookmarkMessage = null) } // Reset message agar tidak muncul terus
             }
         }
     }
