@@ -25,6 +25,7 @@ class AuthRepository @Inject constructor(
     val currentUser: FirebaseUser?
         get() = authRef.currentUser
 
+
     //validate email & pass
     suspend fun login(email: String, pass: String): String {
         return try {
@@ -37,6 +38,18 @@ class AuthRepository @Inject constructor(
                 is FirebaseNetworkException -> NetworkException("Koneksi internet bermasalah")
                 else -> UnknownException(e.message ?: "Terjadi kesalahan")
             }
+        }
+    }
+
+    suspend fun checkIfUserIsAdmin(email: String): Boolean {
+        return try {
+            val snapshot = dbRef.collection("admin")
+                .whereEqualTo("email", email)
+                .get()
+                .await()
+            !snapshot.isEmpty
+        } catch (e: Exception) {
+            false
         }
     }
 

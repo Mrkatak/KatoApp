@@ -7,14 +7,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.lifecycle.lifecycleScope
 import com.example.katoapp.ui.theme.AppTheme
 import com.example.katoapp.viewModel.AuthViewModel
 import dagger.hilt.android.AndroidEntryPoint
-
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.security.MessageDigest
 
 @AndroidEntryPoint
@@ -32,35 +30,22 @@ class MainActivity : ComponentActivity() {
         checkAppSignature()
 
 
-
-        // Cek sesi Login
-        val startScreen = if (viewModel.isUserLoggedIn()) {
-            "MainUserScreen"
-        } else {
-            "LoginScreen"
-        }
-
         enableEdgeToEdge()
-
-        // Opsional: Tahan Splash Screen lebih lama jika sedang memuat data
-        var isKeepSplash = true
-        splashScreen.setKeepOnScreenCondition { isKeepSplash }
-
-        // Simulasi loading data (misal check login status)
-        lifecycleScope.launch {
-            delay(2000) // Tahan selama 2 detik
-            isKeepSplash = false
+        viewModel.checkUserSession()
+        splashScreen.setKeepOnScreenCondition {
+            viewModel.startDestination.value == null
         }
+
+
         setContent {
             AppTheme {
-                Navigation(startDestination = startScreen)
+                val startScreen by viewModel.startDestination.collectAsState()
+                if (startScreen != null) {
+                    Navigation(startDestination = startScreen!!)
+                }
+
             }
         }
-
-
-
-
-
 
     }
 

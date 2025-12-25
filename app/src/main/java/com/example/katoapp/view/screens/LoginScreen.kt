@@ -88,9 +88,17 @@ fun LoginRoute(
         //if success
         if (uiState.loginSuccess) {
             Toast.makeText(context , uiState.successMessage , Toast.LENGTH_SHORT).show()
-            navController.navigate("MainUserScreen") {
-                popUpTo("LoginScreen") { inclusive = true }
+
+            if (uiState.isAdmin) {
+                navController.navigate("DashboardAdminScreen") {
+                    popUpTo("LoginScreen") { inclusive = true }
+                }
+            }else {
+                navController.navigate("MainUserScreen") {
+                    popUpTo("LoginScreen") { inclusive = true }
+                }
             }
+
             viewModel.resetState() //reset state
         }
     }

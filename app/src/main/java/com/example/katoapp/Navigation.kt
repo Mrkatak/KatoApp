@@ -22,6 +22,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.katoapp.view.screens.AddPromptRoute
+import com.example.katoapp.view.screens.DashboardAdminScreen
 import com.example.katoapp.view.screens.DashboardUserRoute
 import com.example.katoapp.view.screens.LoginRoute
 import com.example.katoapp.view.screens.ProfileScreen
@@ -120,11 +121,27 @@ fun Navigation(
             )
         }
 
-
         // Saat masuk ke Dashboard, kita panggil Screen Container di bawah
         composable("MainUserScreen") {
             MainUserScreen(rootNavController = rootNavController, viewModel = viewModel)
         }
+
+        composable("DashboardAdminScreen") {
+            // Asumsi: Anda membuat file DashboardAdminScreen.kt
+            DashboardAdminScreen(
+                onLogoutClick = {
+                    // 1. Panggil fungsi logout di ViewModel
+                    viewModel.logout()
+
+                    // 2. Navigasi kembali ke Login dan hapus history stack
+                    rootNavController.navigate("LoginScreen") {
+                        popUpTo("DashboardAdminScreen") { inclusive = true }
+                    }
+                }
+            )
+        }
+
+
     }
 }
 

@@ -19,30 +19,62 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    private val _startDestination = MutableStateFlow<String?>(null)
+    val startDestination: StateFlow<String?> = _startDestination.asStateFlow()
+
+    // Fungsi ini dipanggil oleh MainActivity saat aplikasi dibuka
+    fun checkUserSession() {
+        viewModelScope.launch {
+            val currentUser = repository.currentUser
+            if (currentUser != null) {
+                // 1. User sudah login di Firebase Auth
+                // 2. Sekarang cek ke Firestore: Apakah dia admin?
+                val email = currentUser.email ?: ""
+                val isAdmin = repository.checkIfUserIsAdmin(email)
+
+                if (isAdmin) {
+                    _startDestination.value = "DashboardAdminScreen"
+                } else {
+                    _startDestination.value = "MainUserScreen"
+                }
+            } else {
+                // Belum login sama sekali
+                _startDestination.value = "LoginScreen"
+            }
+        }
+    }
+
+
     // Fungsi cek apakah user sudah login
     fun isUserLoggedIn(): Boolean {
         return repository.currentUser != null
     }
 
-    //function login
-    fun login(email: String , pass: String) {
+    fun login(email: String, pass: String) {
         if (email.isBlank() || pass.isBlank()) {
             _uiState.update { it.copy(errorMessage = "Mohon isi semua kolom") }
             return
         }
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true , errorMessage = null) }
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                repository.login(email , pass)
+                // 1. Login ke Firebase Auth
+                repository.login(email, pass)
+
+                // 2. Cek apakah UID tersebut adalah Admin
+                val isAdmin = repository.checkIfUserIsAdmin(email)
+
+                // 3. Update State
                 _uiState.update {
                     it.copy(
-                        isLoading = false ,
-                        loginSuccess = true ,
-                        successMessage = "Login Berhasil"
+                        isLoading = false,
+                        loginSuccess = true,
+                        isAdmin = isAdmin, // Set status admin di sini
+                        successMessage = if (isAdmin) "Login sebagai Admin" else "Login Berhasil"
                     )
                 }
             } catch (e: Exception) {
-                _uiState.update { it.copy(isLoading = false , errorMessage = e.message) }
+                _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
             }
         }
     }

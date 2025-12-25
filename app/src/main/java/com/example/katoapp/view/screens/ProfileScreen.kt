@@ -20,6 +20,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,6 +42,10 @@ fun ProfileScreen(
     onLogoutClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadUserStats()
+    }
 
     Column(
         modifier
@@ -98,7 +103,7 @@ fun ProfileScreen(
             ){
                 ProfileItem(number = "12", label = "Prompt\nDisukai")
                 ProfileItem(number = uiState.sharedCount.toString(), label = "Prompt\nDibagikan")
-                ProfileItem(number = "12", label = "Prompt\nDisiman")
+                ProfileItem(number = uiState.savedCount.toString(), label = "Prompt\nDisiman")
             }
         }
 

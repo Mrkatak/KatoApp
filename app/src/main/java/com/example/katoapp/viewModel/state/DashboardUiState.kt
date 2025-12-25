@@ -10,5 +10,6 @@ data class DashboardUiState (
     val categories: List<String> = emptyList() ,
     val popularPrompts: List<Prompt> = emptyList() ,
     val topRatedPrompts: List<Prompt> = emptyList(),
-    val sharedCount: Int = 0
+    val sharedCount: Int = 0,
+    val savedCount: Int = 0
 )

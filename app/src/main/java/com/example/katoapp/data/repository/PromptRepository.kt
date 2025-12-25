@@ -320,6 +320,7 @@ class PromptRepository @Inject constructor(
         }
     }
 
+    // Fungsi untuk menghitung jumlah prompt yang dibagikan (sharing)
     suspend fun getSharedPromptCount(): Int {
         return try {
             val uid = auth.currentUser?.uid ?: return 0
@@ -335,6 +336,25 @@ class PromptRepository @Inject constructor(
 
             // Kembalikan jumlah dokumen yang ditemukan
             snapshot.size()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            0
+        }
+    }
+
+    // Fungsi untuk menghitung jumlah prompt yang disimpan (saved)
+    suspend fun getSavedPromptCount(): Int {
+        return try {
+            val uid = auth.currentUser?.uid ?: return 0
+
+            // Query ke collection "SavedPrompt" milik user
+            val snapshot = firestore.collection("pengguna")
+                .document(uid)
+                .collection("SavedPrompt") // Pastikan nama collection di DB sesuai ini
+                .get()
+                .await()
+
+            snapshot.size() // Kembalikan jumlah dokumen
         } catch (e: Exception) {
             e.printStackTrace()
             0

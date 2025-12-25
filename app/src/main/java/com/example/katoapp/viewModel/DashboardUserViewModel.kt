@@ -82,14 +82,19 @@ class DashboardUserViewModel @Inject constructor(
     }
 
     //function untuk menampilkan jumlah prompt dibagian(sharing prompt)
-    private fun loadUserStats() {
+     fun loadUserStats() {
         viewModelScope.launch {
             // Panggil repo
-            val count = promptRepository.getSharedPromptCount()
+            val shared = promptRepository.getSharedPromptCount()
+            val saved = promptRepository.getSavedPromptCount()
+
 
             // Update UI State
             _uiState.update {
-                it.copy(sharedCount = count)
+                it.copy(
+                    sharedCount = shared,
+                    savedCount = saved
+                )
             }
         }
     }

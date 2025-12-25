@@ -6,5 +6,6 @@ data class AuthUiState(
     val isLoading: Boolean = false,
     val loginSuccess: Boolean = false,
     val registerSuccess: Boolean = false,
-    val resetPassSuccess: Boolean = false
+    val resetPassSuccess: Boolean = false,
+    val isAdmin: Boolean = false
 )

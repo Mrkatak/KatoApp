@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,7 +47,8 @@ import com.example.katoapp.viewModel.AdminViewModel
 @Composable
 fun DashboardAdminRoute(
     navController: NavController,
-    viewModel: AdminViewModel = hiltViewModel()
+    viewModel: AdminViewModel = hiltViewModel(),
+    onLogoutClick: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,6 +67,7 @@ fun DashboardAdminScreen(
     modifier: Modifier = Modifier,
     categories: List<String> = emptyList(),
     prompts: List<Prompt> = emptyList(),
+    onLogoutClick: () -> Unit = {},
     onPromptClick: (String) -> Unit = {}
 ) {
 
@@ -85,7 +86,7 @@ fun DashboardAdminScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = {}
+                        onClick = onLogoutClick
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_logout),
