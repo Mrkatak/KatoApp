@@ -121,6 +121,13 @@ fun Navigation(
             )
         }
 
+        composable(
+            route = "PromptEditScreen/{promptId}",
+            arguments = listOf(navArgument("promptId") { type = NavType.StringType })
+        ) {
+            PromptEditRoute(navController = rootNavController)
+        }
+
         // Saat masuk ke Dashboard, kita panggil Screen Container di bawah
         composable("MainUserScreen") {
             MainUserScreen(rootNavController = rootNavController, viewModel = viewModel)

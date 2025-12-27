@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.lazy.LazyRow
@@ -11,19 +12,28 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +44,8 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -60,36 +72,48 @@ fun PromptDetailRoute(
         }
     }
 
-    // Handle Loading & Error
-    if (uiState.isLoading) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-    } else if (uiState.error != null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = uiState.error ?: "Terjadi Kesalahan", color = Color.Red)
-        }
-    } else if (uiState.prompt != null) {
-        //jika prompt tidak != null tampilkan Screen
-        PromptDetailScreen(
-            data = uiState.prompt!!,
-            isOwner = uiState.isOwner,
-            isSaved = uiState.isSaved,
-            onEditClick = {
-                navController.navigate("PromptEditScreen")
-            },
-            onBackClick = { navController.popBackStack() },
-            onSaveClick = {
-                viewModel.toggleBookmark()
-            },
-            onCopyClick = { text ->
-                // nanti logic copy
-            },
-            onReportClick = {
-                //nanti logic laporan
-                Toast.makeText(context, "Laporan terkirim", Toast.LENGTH_SHORT).show()
+    when {
+        uiState.isLoading -> {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
             }
-        )
+        }
+        uiState.error != null -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = uiState.error ?: "Terjadi Kesalahan",
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+        uiState.prompt != null -> {
+            PromptDetailScreen(
+                data = uiState.prompt!!,
+                isOwner = uiState.isOwner,
+                isSaved = uiState.isSaved,
+                onBackClick = { navController.popBackStack() },
+                onSaveClick = { viewModel.toggleBookmark() },
+                onEditClick = {
+                    navController.navigate("PromptEditScreen/${uiState.prompt?.id}")
+                },
+                onCopyClick = { viewModel.incrementUsage() },
+                onRatingSubmit = { rating ->
+                    viewModel.updateRating(rating)
+                    Toast.makeText(context, "Terima kasih!", Toast.LENGTH_SHORT).show()
+                },
+                onReportClick = {
+                    Toast.makeText(context, "Laporan terkirim", Toast.LENGTH_SHORT).show()
+                }
+            )
+        }
     }
 }
 
@@ -105,10 +129,15 @@ fun PromptDetailScreen(
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     onCopyClick: (String) -> Unit,
+    onRatingSubmit: (Int) -> Unit,
     onReportClick: () -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
+
+    //state dialog rating
+    var showRatingDialog by remember { mutableStateOf(false) }
+    var currentRatingSelection by remember { mutableIntStateOf(1) } //default 1 bintang
 
     //format tanggal
     val dateString = try {
@@ -121,6 +150,117 @@ fun PromptDetailScreen(
     val displayCategory = CategoryMapper.getDisplayName(data.category)
 
     var isPromptExpanded by remember { mutableStateOf(false) }
+
+    var showImagePreview by remember { mutableStateOf(false) }
+
+    //full screen image
+    if (showImagePreview) {
+        Dialog(
+            onDismissRequest = { showImagePreview = false },
+            properties = DialogProperties(
+                usePlatformDefaultWidth = false, // Fullscreen
+                decorFitsSystemWindows = false
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f))
+                    .clickable { showImagePreview = false },
+                contentAlignment = Alignment.Center
+            ) {
+                //zoom logic
+                var scale by remember { mutableFloatStateOf(1f) }
+                var offset by remember { mutableStateOf(Offset.Zero) }
+
+
+                AsyncImage(
+                    model = data.imageUrl,
+                    contentDescription = "Full Image",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y
+                        )
+                        .pointerInput(Unit) {
+                            detectTransformGestures { _, pan, zoom, _ ->
+                                scale = (scale * zoom).coerceIn(1f, 3f)
+                                if (scale == 1f) offset = Offset.Zero
+                                else offset += pan
+                            }
+                        }
+                )
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = 40.dp, end = 20.dp),
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    IconButton(
+                        onClick = { showImagePreview = false },
+                        modifier = Modifier
+//                            .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                            .background(Color.Transparent)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close",
+                            tint = Color.White
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    if (showRatingDialog) {
+        AlertDialog(
+            onDismissRequest = { showRatingDialog = false },
+            title = { Text("Beri Rating Prompt Ini", style = MaterialTheme.typography.titleMedium) },
+            text = {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // loop 5 bintang
+                    for (i in 1..5) {
+                        val icon = if (i <= currentRatingSelection) Icons.Default.Star else Icons.Outlined.Star
+                        val color = if (i <= currentRatingSelection) Color(0xFFFFD700) else Color.Gray
+
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = "Star $i",
+                            tint = color,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clickable { currentRatingSelection = i }
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onRatingSubmit(currentRatingSelection)
+                        showRatingDialog = false
+                    }
+                ) {
+                    Text("Kirim")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRatingDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -142,7 +282,7 @@ fun PromptDetailScreen(
                     if (data.status == "private" && isOwner) {
                         IconButton(
                             onClick = {
-                                //nanti navigasi ke edit prompt screen
+                                onEditClick()
                             }
                         ) {
                             Icon(
@@ -190,6 +330,7 @@ fun PromptDetailScreen(
                     .fillMaxWidth()
                     .height(250.dp)
                     .clip(RoundedCornerShape(18.dp))
+                    .clickable { showImagePreview = true}
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -240,7 +381,9 @@ fun PromptDetailScreen(
 
                     Button(
                         onClick = {
-                            //update rating prompt
+                            val current = data.rating.toDoubleOrNull()?.toInt() ?: 1
+                            currentRatingSelection = if(current == 0) 1 else current
+                            showRatingDialog = true
                         },
                         modifier = Modifier
                             .height(40.dp)
@@ -581,29 +724,29 @@ fun StatItem(
     }
 }
 
-@Composable
-fun MetadataRow(
-    label: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
-        Text(
-            text = value ,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.secondary
-        )
-    }
-}
+//@Composable
+//fun MetadataRow(
+//    label: String,
+//    value: String
+//) {
+//    Row(
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 4.dp),
+//        horizontalArrangement = Arrangement.spacedBy(8.dp)
+//    ) {
+//        Text(
+//            text = label,
+//            style = MaterialTheme.typography.labelSmall,
+//            color = MaterialTheme.colorScheme.secondary
+//        )
+//        Text(
+//            text = value ,
+//            style = MaterialTheme.typography.labelSmall,
+//            color = MaterialTheme.colorScheme.secondary
+//        )
+//    }
+//}
 
 
 @Preview()
@@ -631,6 +774,7 @@ fun PromptDetailScreenPreview() {
         onCopyClick = {},
         onReportClick = {},
         isSaved = false,
-        onEditClick = {}
+        onEditClick = {},
+        onRatingSubmit = {}
     )
 }

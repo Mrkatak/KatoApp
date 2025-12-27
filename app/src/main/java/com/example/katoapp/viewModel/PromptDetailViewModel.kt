@@ -29,14 +29,19 @@ class PromptDetailViewModel @Inject constructor(
         if (promptId != null) {
             loadPromptDetail(promptId)
         } else {
-            _uiState.update { it.copy(error = "ID Prompt tidak ditemukan") }
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    error = "ID Prompt tidak ditemukan"
+                )
+            }
         }
     }
 
     //function load prompt detail
     private fun loadPromptDetail(id: String) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+//            _uiState.update { it.copy(isLoading = true) }
             val result = repository.getPromptById(id)
             val savedStatus = repository.isPromptSaved(id)
 
@@ -74,6 +79,42 @@ class PromptDetailViewModel @Inject constructor(
                 _uiState.update { it.copy(bookmarkMessage = message) } //update message
                 delay(100)
                 _uiState.update { it.copy(bookmarkMessage = null) } // Reset message agar tidak muncul terus
+            }
+        }
+    }
+
+    //function update rating
+    fun updateRating(userRating: Int) {
+        val currentPrompt = _uiState.value.prompt ?: return
+
+        viewModelScope.launch {
+            try {
+                repository.updatePromptRating(currentPrompt, userRating)
+                //ambil data prompt terbaru
+                val updatedPrompt = repository.getPromptById(currentPrompt.id)
+
+                if (updatedPrompt != null) {
+                    _uiState.update {
+                        it.copy(prompt = updatedPrompt)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    //function increment usage
+    fun incrementUsage() {
+        val currentPrompt = _uiState.value.prompt ?: return
+        viewModelScope.launch {
+            try {
+                repository.incrementUsageCount(currentPrompt)
+                _uiState.update {
+                    it.copy(prompt = currentPrompt.copy(usageCount = currentPrompt.usageCount + 1))
+                }
+            } catch (e: Exception) {
+                // Handle error
             }
         }
     }

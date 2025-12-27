@@ -1,9 +1,9 @@
 package com.example.katoapp.viewModel
 
 import android.net.Uri
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.katoapp.data.repository.PromptRepository
 import com.example.katoapp.viewModel.state.PromptOrgUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,14 +17,18 @@ import javax.inject.Inject
 
 @HiltViewModel
 class PromptOrgViewModel @Inject constructor(
-    private val repository: PromptRepository
+    private val repository: PromptRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PromptOrgUiState())
     val uiState: StateFlow<PromptOrgUiState> = _uiState.asStateFlow()
 
+    val promptId: String = savedStateHandle["promptId"] ?: ""
+
     init {
         fetchData()
+        loadData()
     }
 
     //function get category
@@ -99,6 +103,70 @@ class PromptOrgViewModel @Inject constructor(
                         errorMessage = e.message ?: "Terjadi kesalahan saat menyimpan"
                     )
                 }
+            }
+        }
+    }
+
+    //load data prompt
+    private fun loadData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val prompt = repository.getPromptById(promptId)//get data
+            //get data category
+            val mainCats = repository.getMainCategories()
+            val generalCats = repository.getGeneralCategories()
+
+            if (prompt != null) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        promptData = prompt,
+                        categories = mainCats,
+                        generalCategories = generalCats
+                    )
+                }
+            } else {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Data tidak ditemukan"
+                    )
+                }
+            }
+        }
+    }
+
+    //function update prompt
+    fun updatePrompt(
+        title: String, content: String, mainCategory: String,
+        subCategories: List<String>, aiModel: String, modelVersion: String,
+        isSharing: Boolean
+    ) {
+        val currentData = _uiState.value.promptData ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                repository.updatePrompt(
+                    promptId = currentData.id,
+                    title = title,
+                    content = content,
+                    mainCategory = mainCategory,
+                    subCategories = subCategories,
+                    aiModel = aiModel,
+                    modelVersion = modelVersion,
+                    imageUri = _uiState.value.selectedImageUri, // gambar baru
+                    currentImageUrl = currentData.imageUrl,     // gambar lama
+                    isSharing = isSharing
+                )
+                _uiState.update { it.copy(
+                    isLoading = false ,
+                    isSuccess = true
+                ) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(
+                    isLoading = false ,
+                    errorMessage = e.message
+                ) }
             }
         }
     }

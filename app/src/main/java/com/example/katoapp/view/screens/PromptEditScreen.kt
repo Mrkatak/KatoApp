@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage // Pastikan dependency Coil sudah ada, jika belum pakai Image biasa dulu
 import com.example.katoapp.R
+import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.GeneralCategory
 import com.example.katoapp.view.component.MainCategoryButton
@@ -51,85 +52,63 @@ fun PromptEditRoute(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
-    //launcher utk memilih gambar
-    val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
+    val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-        onResult = { uri ->
-            //kirim URI ke ViewModel utk disimpan sementara
-            viewModel.onImageSelected(uri)
-        }
+        onResult = { uri -> viewModel.onImageSelected(uri) }
     )
 
-    LaunchedEffect(uiState.isSuccess, uiState.errorMessage) {
+    LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            Toast.makeText(context, "Prompt Berhasil Disimpan!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Berhasil diperbarui!", Toast.LENGTH_SHORT).show()
             navController.popBackStack()
-            viewModel.resetSuccessState()
-        }
-
-        if (uiState.errorMessage != null) {
-            Toast.makeText(context, uiState.errorMessage, Toast.LENGTH_LONG).show()
         }
     }
 
-
-    PromptEditScreen(
-        onBackClick = { navController.popBackStack() },
-        onSaveClick = { title, content, mainCat, model, version, subCats, sharing ->
-            viewModel.savePrompt(
-                title = title,
-                content = content,
-                mainCategory = mainCat,
-                subCategories = subCats,
-                aiModel = model,
-                modelVersion = version,
-                imageUri = uiState.selectedImageUri,
-                isSharing = sharing
-            )
-        },
-        onImageClick = {
-            singlePhotoPickerLauncher.launch(
-                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-            )
-        },
-        categories = uiState.categories,
-        isLoading = uiState.isLoading,
-        generalCategories = uiState.generalCategories,
-        selectedGeneralCategories = uiState.selectedGeneralCategories,
-        selectedImageUri = uiState.selectedImageUri,
-        onGeneralCategoryToggle = { category ->
-            viewModel.toggleGeneralCategory(category)
+    if (uiState.isLoading && uiState.promptData == null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
         }
-    )
+    } else if (uiState.promptData != null) {
+        PromptEditScreen(
+            initialData = uiState.promptData!!,
+            categories = uiState.categories,
+            generalCategories = uiState.generalCategories,
+            newImageUri = uiState.selectedImageUri,
+            isLoading = uiState.isLoading,
+            onBackClick = { navController.popBackStack() },
+            onImageClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+            onSaveClick = { title, content, mainCat, model, ver, subCats, sharing ->
+                viewModel.updatePrompt(title, content, mainCat, subCats, model, ver, sharing)
+            }
+        )
+    }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PromptEditScreen(
-    modifier: Modifier = Modifier,
-    onBackClick: () -> Unit,
-    onSaveClick: (String, String, String, String, String, List<String>, Boolean) -> Unit,
-    onImageClick: () -> Unit,
-    categories: List<String>,
-    generalCategories: List<String>,
-    selectedGeneralCategories: List<String>,
-    onGeneralCategoryToggle: (String) -> Unit,
-    isLoading: Boolean = false,
-    selectedImageUri: Uri? = null
+    modifier: Modifier = Modifier ,
+    initialData: Prompt ,
+    newImageUri: Uri?,
+    onBackClick: () -> Unit ,
+    onSaveClick: (String, String, String, String, String, List<String>, Boolean) -> Unit ,
+    onImageClick: () -> Unit ,
+    categories: List<String> ,
+    generalCategories: List<String> ,
+    isLoading: Boolean = false
 ) {
     // State Lokal Form
-    var title by remember { mutableStateOf("") }
-    var promptContent by remember { mutableStateOf("") }
-    var aiModel by remember { mutableStateOf("") }
-    var modelVersion by remember { mutableStateOf("") }
-//    var generalCategory by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf(initialData.title) }
+    var promptContent by remember { mutableStateOf(initialData.content) }
+    var aiModel by remember { mutableStateOf(initialData.aiModel) }
+    var modelVersion by remember { mutableStateOf(initialData.modelVersion) }
 
-    //state main category (default index 0)
-    var selectedCategory by remember(categories) {
-        mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
-    }
-    var isSharing by remember { mutableStateOf(false) }
+    //category
+    var selectedCategory by remember { mutableStateOf(initialData.category)}
+    var selectedGeneralCategories by remember { mutableStateOf(initialData.subCategories) }
+
+    var isSharing by remember { mutableStateOf(initialData.status == "sharing") }
 
     Scaffold(
         topBar = {
@@ -304,10 +283,14 @@ fun PromptEditScreen(
                     )
                 } else {
                     GeneralCategory(
-                        label = "Makanan...",
+                        label = "Pilih Kategori",
                         options = generalCategories,
                         selectedOptions = selectedGeneralCategories,
-                        onSelectionChanged = onGeneralCategoryToggle,
+                        onSelectionChanged = { cat ->
+                            val list = selectedGeneralCategories.toMutableList()
+                            if (list.contains(cat)) list.remove(cat) else list.add(cat)
+                            selectedGeneralCategories = list
+                        },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -325,10 +308,17 @@ fun PromptEditScreen(
                         .clickable { onImageClick() },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (selectedImageUri != null) {
+                    if (newImageUri != null) {
                         AsyncImage(
-                            model = selectedImageUri,
-                            contentDescription = "Preview Gambar",
+                            model = newImageUri,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else if(initialData.imageUrl.isNotEmpty()){
+                        AsyncImage(
+                            model = initialData.imageUrl,
+                            contentDescription = null,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -375,42 +365,6 @@ fun PromptEditScreen(
                 modifier = Modifier
                     .fillMaxWidth()
             ) {
-                //Button Simpan
-//                Button(
-//                    onClick = {
-//                        if (title.isNotEmpty() && promptContent.isNotEmpty()) {
-//                            onSaveClick(
-//                                title,
-//                                promptContent,
-//                                selectedCategory,
-//                                aiModel,
-//                                modelVersion,
-//                                selectedGeneralCategories,
-//                                isSharing
-//                            )
-//                        }
-//                    },
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(40.dp),
-//                    shape = RoundedCornerShape(100.dp),
-//                    enabled = !isLoading,
-//                    elevation = ButtonDefaults.elevatedButtonElevation(2.dp)
-//                ) {
-//                    if (isLoading) {
-//                        CircularProgressIndicator(
-//                            color = Color.White,
-//                            modifier = Modifier.size(24.dp)
-//                        )
-//                    } else {
-//                        Text(
-//                            text = "Simpan",
-//                            style = MaterialTheme.typography.labelLarge,
-//                            color = MaterialTheme.colorScheme.onPrimary
-//                        )
-//                    }
-//                }
-
                 Row(
                     modifier
                         .fillMaxWidth(),
@@ -441,7 +395,15 @@ fun PromptEditScreen(
                     Spacer(modifier.width(8.dp))
                     Button(
                         onClick = {
-                            //function hapus
+                            onSaveClick(
+                                title,
+                                promptContent,
+                                selectedCategory,
+                                aiModel,
+                                modelVersion,
+                                selectedGeneralCategories,
+                                isSharing
+                            )
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -487,16 +449,27 @@ fun PromptEditScreen(
 
 
 @Preview(showBackground = true, showSystemUi = true)
-@Composable private fun View() {
+@Composable
+fun PromptEditPreview() {
+    val dummyPrompt = Prompt(
+
+        title = "Judul Prompt",
+        content = "Isi prompt",
+        aiModel = "ChatGPT",
+        modelVersion = "4o",
+        category = "Text to Image",
+        subCategories = listOf("Robotic", "Teknologi"),
+        status = "sharing"
+    )
+
     PromptEditScreen(
+        initialData = dummyPrompt,
+        newImageUri = null,
+        categories = listOf("Text to Text", "Text to Image"),
+        generalCategories = listOf("Teknologi", "Seni"),
         onBackClick = {},
         onSaveClick = { _, _, _, _, _, _, _ -> },
-        onImageClick = {},
-        onGeneralCategoryToggle = {},
-        categories = listOf("Text to Text", "Text to Image", "Text to Video"),
-        generalCategories = listOf("Makanan", "Teknologi", "Pendidikan", "Hiburan"),
-        selectedGeneralCategories = listOf("Teknologi"),
-        isLoading = false,
-        selectedImageUri = null
+        onImageClick = {}
     )
 }
+

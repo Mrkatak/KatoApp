@@ -42,6 +42,12 @@ data class Prompt(
     @get:PropertyName("Rating")
     val rating: String = "0.0",
 
+    @get:PropertyName("TotalRatingValue")
+    val totalRatingValue: Double = 0.0,
+
+    @get:PropertyName("RatingCount")
+    val ratingCount: Int = 0,
+
     @get:PropertyName("UsageCount")
     val usageCount: Int = 0,
 

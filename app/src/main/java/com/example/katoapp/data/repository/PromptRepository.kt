@@ -93,7 +93,9 @@ class PromptRepository @Inject constructor(
                 "UserEmail" to (currentUser.email ?: ""),
                 "Tanggal" to FieldValue.serverTimestamp(),
                 "Rating" to "0.0",
-                "UsageCount" to 0
+                "UsageCount" to 0,
+                "TotalRatingValue" to 0.0,
+                "RatingCount" to 0
             )
 
             val batch = firestore.batch()
@@ -447,28 +449,164 @@ class PromptRepository @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val uid = auth.currentUser?.uid ?: throw Exception("User belum login")
-
                 val savedRef = firestore.collection("pengguna")
                     .document(uid)
                     .collection("SavedPrompt") // Collection Khusus Bookmark
                     .document(prompt.id) // Pakai ID yang sama dengan aslinya
 
                 val snapshot = savedRef.get().await()
-
                 if (snapshot.exists()) {
-                    // KASUS 1: Sudah disimpan -> HAPUS (Unbookmark)
-                    savedRef.delete().await()
+                    savedRef.delete().await() //hapus dari bookmark
                     "Dihapus dari simpanan"
                 } else {
-                    // KASUS 2: Belum disimpan -> SIMPAN (Copy Data)
-                    // Kita simpan objek prompt apa adanya
-                    savedRef.set(prompt).await()
+                    savedRef.set(prompt).await() //tambahkan ke bookmark
                     "Berhasil disimpan"
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 "Gagal mengubah status simpan"
             }
+        }
+    }
+
+    //fun update prompt rating
+    suspend fun updatePromptRating(prompt: Prompt, userRating: Int) {
+        withContext(Dispatchers.IO) {
+            firestore.runTransaction { transaction -> //transaction untuk hitung rating
+                //dari admin
+                val adminRef = firestore.collection("admin")
+                    .document(adminDocId)
+                    .collection("SharingPrompt")
+                    .document(prompt.id)
+
+                val snapshot = transaction.get(adminRef)
+                //ambil data lama atau 0
+                val currentTotalValue = snapshot.getDouble("TotalRatingValue") ?: 0.0
+                val currentCount = snapshot.getLong("RatingCount") ?: 0
+
+                //rumus rata - rata
+                val newTotalValue = currentTotalValue + userRating
+                val newCount = currentCount + 1
+                val newAverage = newTotalValue / newCount
+                //format to string
+                val newAverageString = String.format("%.1f", newAverage)
+
+                //update ke admin
+                transaction.update(adminRef, "TotalRatingValue", newTotalValue)
+                transaction.update(adminRef, "RatingCount", newCount)
+                transaction.update(adminRef, "Rating", newAverageString)
+
+                // update ke pengguna
+                val userRef = firestore.collection("pengguna")
+                    .document(prompt.userId)
+                    .collection("PrivatePrompt")
+                    .document(prompt.id)
+
+                transaction.update(userRef, "Rating", newAverageString)
+                transaction.update(userRef, "TotalRatingValue", newTotalValue)
+                transaction.update(userRef, "RatingCount", newCount)
+
+            }.await()
+        }
+    }
+
+    //function update prompt usage count
+    suspend fun incrementUsageCount(prompt: Prompt) {
+        withContext(Dispatchers.IO) {
+            val batch = firestore.batch()
+
+            // Update Admin
+            if (prompt.status == "sharing") {
+                val adminRef = firestore.collection("admin")
+                    .document(adminDocId)
+                    .collection("SharingPrompt")
+                    .document(prompt.id)
+                // Atomic Increment
+                batch.update(
+                    adminRef,
+                    "UsageCount",
+                    FieldValue.increment(1)
+                )
+            }
+
+            // Update User
+            val userRef = firestore.collection("pengguna")
+                .document(prompt.userId)
+                .collection("PrivatePrompt")
+                .document(prompt.id)
+
+            batch.update(
+                userRef,
+                "UsageCount",
+                FieldValue.increment(1)
+            )
+            batch.commit().await()
+        }
+    }
+
+    //fun update prompt
+    suspend fun updatePrompt(
+        promptId: String,
+        title: String, content: String, mainCategory: String,
+        subCategories: List<String>, aiModel: String, modelVersion: String,
+        imageUri: Uri?, isSharing: Boolean,
+        currentImageUrl: String
+    ) {
+        withContext(Dispatchers.IO) {
+            val currentUser = auth.currentUser ?: throw Exception("User belum login")
+
+            //jika update gambar
+            var finalImageUrl = currentImageUrl
+            if (imageUri != null) {
+                //upload URI to claudinary
+                val uploadResult = cloudinaryHelper.uploadImage(imageUri).first { it !is ResourceCloudinary.Loading }
+                if (uploadResult is ResourceCloudinary.Success) {
+                    finalImageUrl = uploadResult.data
+                }
+            }
+
+            val updateData = hashMapOf<String, Any>(
+                "Judul" to title,
+                "Prompt" to content,
+                "KategoriUtama" to mainCategory,
+                "KategoriUmum" to subCategories,
+                "ModelAi" to aiModel,
+                "VersiModelAi" to modelVersion,
+                "LinkGambar" to finalImageUrl,
+                "Status" to if (isSharing) "sharing" else "private",
+            )
+
+            val batch = firestore.batch()
+
+            //update di pengguna
+            val privateRef = firestore.collection("pengguna")
+                .document(currentUser.uid)
+                .collection("PrivatePrompt")
+                .document(promptId)
+
+            batch.update(privateRef, updateData)
+
+            // B. Logic Sharing (Admin)
+            val adminRef = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .document(promptId)
+
+            if (isSharing) {
+                //jika sharing tambahkan prompt ke admin
+                val fullData = updateData.toMutableMap()
+                fullData["UserId"] = currentUser.uid
+                fullData["Username"] = currentUser.displayName ?: "User"
+                fullData["UserEmail"] = currentUser.email ?: ""
+                fullData["Rating"] = "0.0"
+                fullData["UsageCount"] = 0
+                fullData["Tanggal"] = FieldValue.serverTimestamp()
+                batch.set(adminRef, fullData, com.google.firebase.firestore.SetOptions.merge())
+            } else {
+                batch.delete(adminRef)
+            }
+
+            batch.commit().await()
         }
     }
 
