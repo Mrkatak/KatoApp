@@ -232,27 +232,52 @@ fun SharingPromptScreen(
     }
 }
 
-//@Preview(showBackground = true, showSystemUi = true)
-//@Composable
-//fun SharingPromptScreenPreview() {
-//    SharingPromptScreen(
-//        searchQuery = "Kucing lucu..",
-//        generalCategories = listOf(
-//            "Teknologi", "Seni Digital", "Bisnis",
-//            "Pendidikan", "Hiburan", "Fotografi"
-//        ),
-//        selectedCategories = listOf("Seni Digital"),
-//        isLoading = false,
-//        onQueryChange = {},
-//        onSearchClicked = {},
-//        onCategoryToggle = {},
-//        categories = listOf("Text to Text", "Text to Image", "Text to Video"),
-//        popularPrompts = emptyList(),
-//        topRatedPrompts = emptyList(),
-//        onPromptClick = {},
-//        onBackClick = {},
-//        onMainCategoryClick = {},
-//        promptList = listOf("")
-//    )
-//}
+val dummyPromptsForPreview = listOf(
+    Prompt(
+        id = "1",
+        title = "Pemandangan Cyberpunk",
+        category = "Text to Image",
+        rating = "4.8",
+        imageUrl = "",
+        usageCount = 120
+    ),
+    Prompt(
+        id = "2",
+        title = "Logo Kelompok Penerbang Roket",
+        category = "Text to Image",
+        rating = "4.5",
+        imageUrl = "",
+        usageCount = 85
+    ),
+    Prompt(
+        id = "3",
+        title = "Cara Menebang Hutan",
+        category = "Text to Text",
+        rating = "5.0",
+        imageUrl = "",
+        usageCount = 200
+    )
+)
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun SharingPromptScreenPreview() {
+    MaterialTheme {
+        SharingPromptScreen(
+            searchQuery = "Logo",
+            categories = listOf("Text to Text", "Text to Image", "Text to Video", "Text to Speech"),
+            generalCategories = listOf("Bisnis", "Hiburan", "Pendidikan", "Teknologi", "Seni"),
+            selectedMainCategory = "Text to Image",
+            selectedCategories = listOf("Bisnis"),
+            isLoading = false,
+            onQueryChange = {},
+            onSearchClicked = {},
+            onMainCategoryClick = {},
+            onCategoryToggle = {},
+            onPromptClick = {},
+            onBackClick = {},
+            promptList = dummyPromptsForPreview
+        )
+    }
+}
 
