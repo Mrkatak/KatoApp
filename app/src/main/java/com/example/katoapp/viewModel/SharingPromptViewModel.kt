@@ -2,6 +2,7 @@ package com.example.katoapp.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.data.repository.PromptRepository
 import com.example.katoapp.viewModel.state.SharingPromptUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,9 +21,12 @@ class SharingPromptViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SharingPromptUiState())
     val uiState: StateFlow<SharingPromptUiState> = _uiState.asStateFlow()
 
+    //cache data mentah (nanti di ganti derek langsung dari repository)
+    private var allLatestPrompts: List<Prompt> = emptyList()
+
     init {
         fetchData()
-        loadTopFivePrompts()
+        loadInitialData()
     }
 
     //get category
@@ -46,12 +50,44 @@ class SharingPromptViewModel @Inject constructor(
         }
     }
 
+    private fun loadInitialData() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            //get category
+            val mainCats = promptRepository.getMainCategories()
+            val generalCats = promptRepository.getGeneralCategories()
+            //get prompt
+            allLatestPrompts = promptRepository.getLatestPrompts()
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    categories = mainCats,
+                    generalCategories = generalCats,
+                    selectedMainCategory = "",
+                    popularPrompts = allLatestPrompts
+                )
+            }
+        }
+    }
+
     // Update Text SearchBar
     fun onQueryChange(newQuery: String) {
         _uiState.update { it.copy(searchQuery = newQuery) }
     }
 
-    //toggle filter
+    fun setMainCategory(category: String) {
+        _uiState.update { currentState ->
+            val newSelection = if (currentState.selectedMainCategory == category) "" else category
+            val filteredList = applyLocalFilters(newSelection, currentState.selectedCategories)
+
+            currentState.copy(
+                selectedMainCategory = newSelection,
+                popularPrompts = filteredList
+            )
+        }
+    }
+
     fun toggleCategory(category: String) {
         _uiState.update { currentState ->
             val currentList = currentState.selectedCategories.toMutableList()
@@ -60,35 +96,32 @@ class SharingPromptViewModel @Inject constructor(
             } else {
                 currentList.add(category)
             }
+
+            val filteredList = applyLocalFilters(currentState.selectedMainCategory, currentList)
+
             currentState.copy(
-                selectedCategories = currentList
+                selectedCategories = currentList,
+                popularPrompts = filteredList
             )
         }
     }
 
-    //get top 5 prompt
-    private fun loadTopFivePrompts() {
-        viewModelScope.launch {
-            val popularResult = promptRepository.getPopularPrompts()
-            val topRatedResult = promptRepository.getTopRatedPrompts()
+    private fun applyLocalFilters(mainCat: String, generalCats: List<String>): List<Prompt> {
+        var result = allLatestPrompts
 
-            _uiState.update {
-                it.copy(
-                    popularPrompts = popularResult,
-                    topRatedPrompts = topRatedResult
-                )
+        //filter Main
+        if (mainCat.isNotEmpty()) {
+            result = result.filter { it.category == mainCat }
+        }
+        //filter general
+        if (generalCats.isNotEmpty()) {
+            result = result.filter { prompt ->
+                prompt.subCategories.any { it in generalCats }
             }
         }
+
+        return result
     }
 
-    //control MainCategory
-    fun setMainCategory(category: String) {
-        _uiState.update { currentState ->
-            //klik lagi utk batalkan
-//            val newSelection = if (currentState.selectedMainCategory == category) "" else category
-            currentState.copy(
-                selectedMainCategory = category
-            )
-        }
-    }
+
 }

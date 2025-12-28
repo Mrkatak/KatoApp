@@ -363,44 +363,86 @@ class PromptRepository @Inject constructor(
         }
     }
 
-    //function search prompt
-    suspend fun searchPrompts(query: String, filters: List<String>): List<Prompt> {
+    //fun get latest prompt
+    suspend fun getLatestPrompts(): List<Prompt> {
         return try {
-            val collectionRef = firestore.collection("admin")
+            val snapshot = firestore.collection("admin")
                 .document(adminDocId)
                 .collection("SharingPrompt")
-            //get data
-            val snapshot = collectionRef
                 .orderBy("Tanggal", Query.Direction.DESCENDING)
-                .limit(100) //ambil 100 terbaru
+                .limit(50)
+                .get()
+                .await()
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    //function search prompt
+    suspend fun searchPrompts(rawQuery: String): List<Prompt> {
+        return try {
+            //get data
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .orderBy("Tanggal", Query.Direction.DESCENDING)
+                .limit(100)
                 .get()
                 .await()
 
-            var results = mapSnapshotToPromptList(snapshot)
-            if (query.isNotEmpty()) {
-                val cleanQuery = query.trim().lowercase() //huruf kecil
+            val allPrompts = mapSnapshotToPromptList(snapshot)
+            // parsing query
+            val lowerQuery = rawQuery.lowercase().trim()
 
-                results = results.filter { prompt ->
-                    val title = prompt.title.lowercase()
-                    val isMatch = title.contains(cleanQuery)//Cek Case Insensitive
-                    //cek typo fuzzy
-                    val isFuzzy = if (!isMatch && cleanQuery.length > 3) {
-                        hasTypoMatch(title, cleanQuery)
-                    } else {
-                        false
-                    }
+            var targetMainCategory = ""
+            var contentQuery = lowerQuery
 
+            //deteksi keyword (mapping manual id -> en)
+            if (lowerQuery.contains("gambar") || lowerQuery.contains("image") || lowerQuery.contains("lukisan")) {
+                targetMainCategory = "Text to Image"
+                contentQuery = lowerQuery.replace("gambar", "").replace("image", "").replace("lukisan", "").trim()
+            } else if (lowerQuery.contains("video") || lowerQuery.contains("film")) {
+                targetMainCategory = "Text to Video"
+                contentQuery = lowerQuery.replace("video", "").replace("film", "").trim()
+            } else if (lowerQuery.contains("suara") || lowerQuery.contains("audio") || lowerQuery.contains("musik")) {
+                targetMainCategory = "Text to Speech"
+                contentQuery = lowerQuery.replace("suara", "").replace("audio", "").replace("musik", "").trim()
+            } else if (lowerQuery.contains("teks") || lowerQuery.contains("text") || lowerQuery.contains("tulisan")) {
+                targetMainCategory = "Text to Text"
+                contentQuery = lowerQuery.replace("teks", "").replace("text", "").replace("tulisan", "").trim()
+            }
+
+            //filtering
+            allPrompts.filter { prompt ->
+                //cek kategori di query
+                val matchCategory = if (targetMainCategory.isNotEmpty()) {
+                    prompt.category == targetMainCategory
+                } else {
+                    true
+                }
+
+                //cek judul (fuzzy matching)
+                val title = prompt.title.lowercase()
+                val matchTitle = if (contentQuery.isNotEmpty()) {
+                    val isMatch = title.contains(contentQuery)
+                    val isFuzzy = if (!isMatch && contentQuery.length > 3) hasTypoMatch(title, contentQuery) else false
                     isMatch || isFuzzy
+                } else {
+                    true
                 }
+
+                //cek general category
+                val tags = prompt.subCategories.map { it.lowercase() }
+                val matchTags = if (contentQuery.isNotEmpty()) {
+                    tags.any { it.contains(contentQuery) }
+                } else {
+                    false
+                }
+
+                matchCategory && (matchTitle || matchTags)
             }
 
-            if (filters.isNotEmpty()) { // filter kategori
-                results = results.filter { prompt ->
-                    prompt.subCategories.any { it in filters }
-                }
-            }
-
-            results
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()

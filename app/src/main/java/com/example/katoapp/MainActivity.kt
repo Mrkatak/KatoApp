@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-        checkAppSignature()
+//        checkAppSignature()
 
 
         enableEdgeToEdge()
@@ -49,36 +49,34 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    private fun checkAppSignature() {
-        try {
-            // Gunakan bendera GET_SIGNATURES yang lama (kita Suppress warning-nya)
-            @Suppress("DEPRECATION")
-            val info = packageManager.getPackageInfo(
-                packageName,
-                PackageManager.GET_SIGNATURES
-            )
-
-            // PERBAIKAN: Cek apakah signatures tidak null sebelum diloop
-            val signatures = info.signatures
-            if (signatures != null) {
-                for (signature in signatures) {
-                    val md = MessageDigest.getInstance("SHA-1")
-                    md.update(signature.toByteArray())
-                    val digest = md.digest()
-                    val hexString = StringBuilder()
-
-                    // Format byte ke Hex
-                    for (b in digest) {
-                        hexString.append(String.format("%02X:", b))
-                    }
-
-                    // Tampilkan di Logcat
-                    // dropLast(1) untuk membuang titik dua (:) terakhir
-                    Log.d("CEK_SHA1", "SHA-1 ASLI: ${hexString.toString().dropLast(1)}")
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("CEK_SHA1", "Error mengambil signature", e)
-        }
-    }
+//    private fun checkAppSignature() {
+//        try {
+//            //get signature
+//            @Suppress("DEPRECATION")
+//            val info = packageManager.getPackageInfo(
+//                packageName,
+//                PackageManager.GET_SIGNATURES
+//            )
+//
+//            //loop
+//            val signatures = info.signatures
+//            if (signatures != null) {
+//                for (signature in signatures) {
+//                    val md = MessageDigest.getInstance("SHA-1")
+//                    md.update(signature.toByteArray())
+//                    val digest = md.digest()
+//                    val hexString = StringBuilder()
+//
+//                    //byte to hex
+//                    for (b in digest) {
+//                        hexString.append(String.format("%02X:", b))
+//                    }
+//                    //logcat
+//                    Log.d("CEK_SHA1", "SHA-1 ASLI: ${hexString.toString().dropLast(1)}")
+//                }
+//            }
+//        } catch (e: Exception) {
+//            Log.e("CEK_SHA1", "Error mengambil signature", e)
+//        }
+//    }
 }

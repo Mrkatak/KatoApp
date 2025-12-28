@@ -724,30 +724,6 @@ fun StatItem(
     }
 }
 
-//@Composable
-//fun MetadataRow(
-//    label: String,
-//    value: String
-//) {
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .padding(vertical = 4.dp),
-//        horizontalArrangement = Arrangement.spacedBy(8.dp)
-//    ) {
-//        Text(
-//            text = label,
-//            style = MaterialTheme.typography.labelSmall,
-//            color = MaterialTheme.colorScheme.secondary
-//        )
-//        Text(
-//            text = value ,
-//            style = MaterialTheme.typography.labelSmall,
-//            color = MaterialTheme.colorScheme.secondary
-//        )
-//    }
-//}
-
 
 @Preview()
 @Composable

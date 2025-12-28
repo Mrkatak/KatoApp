@@ -12,19 +12,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.focus.focusModifier
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.CategoryMapper
@@ -48,12 +44,11 @@ fun SharingPromptRoute(
         // data list
         categories = uiState.categories,
         generalCategories = uiState.generalCategories,
-        popularPrompts = uiState.popularPrompts,
-        topRatedPrompts = uiState.topRatedPrompts,
         //data seleksi
         selectedMainCategory = uiState.selectedMainCategory,
         selectedCategories = uiState.selectedCategories,
 
+        promptList = uiState.popularPrompts,
         isLoading = uiState.isLoading,
         onQueryChange = { viewModel.onQueryChange(it) },
 
@@ -65,24 +60,13 @@ fun SharingPromptRoute(
         },
         //search
         onSearchClicked = { query ->
-            // Validasi: Minimal ada teks ATAU salah satu kategori terpilih
-            if (query.isNotEmpty() || uiState.selectedCategories.isNotEmpty() || uiState.selectedMainCategory.isNotEmpty()) {
-
-                // Format Navigasi Khusus: SEARCH:query|mainCat|filter1,filter2
-                // Kita gabungkan semua filter menjadi satu string parameter
+            if (query.isNotBlank()) {
                 val cleanQuery = query.trim()
-                val mainCat = uiState.selectedMainCategory.ifEmpty { "All" }
-                val filters = uiState.selectedCategories.joinToString(",")
-
-                // String ajaib ini nanti akan di-parsing oleh SearchPromptViewModel di halaman hasil
-                val searchParam = "SEARCH:$cleanQuery|$mainCat|$filters"
-
+                val searchParam = "SEARCH_NATURAL:$cleanQuery"
                 navController.navigate("PromptSearchResultScreen/$searchParam")
             }
         },
         //navigasi
-        onPopularClick = { navController.navigate("PromptSearchResultScreen/Popular") },
-        onTopRatedClick = { navController.navigate("PromptSearchResultScreen/TopRated") },
         onPromptClick = { id -> navController.navigate("PromptDetailScreen/$id") },
         onBackClick = { navController.popBackStack() }
     )
@@ -96,24 +80,17 @@ fun SharingPromptScreen(
     generalCategories: List<String>,
     selectedMainCategory: String,
     selectedCategories: List<String>,
-    popularPrompts: List<Prompt>,
-    topRatedPrompts: List<Prompt>,
+    promptList: List<Prompt>,
     isLoading: Boolean,
     onQueryChange: (String) -> Unit,
     onSearchClicked: (String) -> Unit,
     onMainCategoryClick: (String) -> Unit,
     onCategoryToggle: (String) -> Unit,
-    onPopularClick: () -> Unit,
-    onTopRatedClick: () -> Unit,
     onPromptClick: (String) -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 
 ) {
-    //default selected index 0
-//    var selectedCategory by remember(categories) {
-//        mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
-//    }
 
     Column(
         modifier = modifier
@@ -138,7 +115,7 @@ fun SharingPromptScreen(
         Column(
             modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+//                .verticalScroll(rememberScrollState())
         ) {
             //main category button
             Column(
@@ -211,141 +188,71 @@ fun SharingPromptScreen(
 
             Spacer(modifier.height(16.dp))
 
-            //list top 5 prompt popular
-            Column(
-                modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 26.dp)
-            ) {
-                Row(
-                    modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Absolute.SpaceBetween
+            //list prompt terbaru
+            if (isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Prompt Populer",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
-                    TextButton(
-                        onClick = onPopularClick,
-                        contentPadding = PaddingValues(vertical =0.dp),
-                        modifier = Modifier.height(16.dp)
-                    ) {
-                        Text(
-                            text = "Lainnya",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
+                    CircularProgressIndicator()
                 }
-
-                Spacer(modifier.height(8.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            } else if (promptList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    items(popularPrompts) { prompt ->
-                        val displayCategory = CategoryMapper.getDisplayName(prompt.category)
+                    Text("Belum ada prompt.", color = Color.Gray)
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 100.dp, top = 16.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(promptList) { prompt ->
                         PromptCard(
                             title = prompt.title,
                             imageUrl = prompt.imageUrl,
-                            category = displayCategory,
-                            rating = prompt.rating,
-                            onClick = {
-                                onPromptClick(prompt.id)
-                            }
+                            category = CategoryMapper.getDisplayName(prompt.category),
+                            rating = prompt.rating.ifEmpty { "New" },
+                            onClick = { onPromptClick(prompt.id) },
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
-
             }
 
-            Spacer(modifier.height(16.dp))
-
-            //List top 5 prompt Rating
-            Column(
-                modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 26.dp)
-            ) {
-                Row(
-                    modifier
-                        .fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Absolute.SpaceBetween
-                ) {
-                    Text(
-                        text = "Rating Tertinggi",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-
-                    TextButton(
-                        onClick = onTopRatedClick,
-                        contentPadding = PaddingValues(vertical =0.dp),
-                        modifier = Modifier.height(16.dp)
-                    ) {
-                        Text(
-                            text = "Lainnya",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                }
-
-                Spacer(modifier.height(8.dp))
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    items(topRatedPrompts) { prompt ->
-                        val displayCategory = CategoryMapper.getDisplayName(prompt.category)
-                        PromptCard(
-                            title = prompt.title,
-                            imageUrl = prompt.imageUrl,
-                            category = displayCategory,
-                            rating = prompt.rating,
-                            onClick = {
-                                onPromptClick(prompt.id)
-                            }
-                        )
-                    }
-                }
-
-            }
         }
 
 
     }
 }
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun SharingPromptScreenPreview() {
-    SharingPromptScreen(
-        searchQuery = "Kucing lucu..",
-        generalCategories = listOf(
-            "Teknologi", "Seni Digital", "Bisnis",
-            "Pendidikan", "Hiburan", "Fotografi"
-        ),
-        selectedCategories = listOf("Seni Digital"),
-        isLoading = false,
-        onQueryChange = {},
-        onSearchClicked = {},
-        onCategoryToggle = {},
-        categories = listOf("Text to Text", "Text to Image", "Text to Video"),
-        popularPrompts = emptyList(),
-        topRatedPrompts = emptyList(),
-        onPopularClick = {},
-        onTopRatedClick = {},
-        onPromptClick = {},
-        onBackClick = {},
-        onMainCategoryClick = {},
-        selectedMainCategory = "Teks"
-    )
-}
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun SharingPromptScreenPreview() {
+//    SharingPromptScreen(
+//        searchQuery = "Kucing lucu..",
+//        generalCategories = listOf(
+//            "Teknologi", "Seni Digital", "Bisnis",
+//            "Pendidikan", "Hiburan", "Fotografi"
+//        ),
+//        selectedCategories = listOf("Seni Digital"),
+//        isLoading = false,
+//        onQueryChange = {},
+//        onSearchClicked = {},
+//        onCategoryToggle = {},
+//        categories = listOf("Text to Text", "Text to Image", "Text to Video"),
+//        popularPrompts = emptyList(),
+//        topRatedPrompts = emptyList(),
+//        onPromptClick = {},
+//        onBackClick = {},
+//        onMainCategoryClick = {},
+//        promptList = listOf("")
+//    )
+//}
 

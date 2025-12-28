@@ -51,37 +51,26 @@ fun PromptSearchResultRoute(
         viewModel.searchByCategory(categoryName)
     }
 
-//    val displayTitle = if (categoryName == "Popular") {
-//        "Prompt Populer"
-//    } else {
-//        CategoryMapper.getDisplayName(categoryName)
-//    }
-
+    //display title
     val displayTitle = remember(categoryName) {
         when {
-            // Jika formatnya SEARCH:query|MainCat|Filters
-            categoryName.startsWith("SEARCH:") -> {
-                val rawContent = categoryName.removePrefix("SEARCH:")
-                val parts = rawContent.split("|")
-                // Index 1 adalah Main Category (misal: "Text to Image")
-                val mainCategoryRaw = parts.getOrNull(1) ?: "All"
-
-                if (mainCategoryRaw != "All" && mainCategoryRaw.isNotEmpty()) {
-                    CategoryMapper.getDisplayName(mainCategoryRaw)
-                } else {
-                    "Hasil Pencarian"
-                }
+            categoryName.startsWith("SEARCH_NATURAL:") -> {
+                val query = categoryName.removePrefix("SEARCH_NATURAL:").lowercase()
+                //display title sesuai query
+                if (query.contains("gambar") || query.contains("image")) "Gambar"
+                else if (query.contains("video") || query.contains("film")) "Video"
+                else if (query.contains("teks") || query.contains("text")) "Teks"
+                else if (query.contains("suara") || query.contains("audio")) "Suara"
+                else "Hasil Pencarian"
             }
-            // Jika kategori preset
             categoryName == "Popular" -> "Prompt Populer"
             categoryName == "Rating" -> "Rating Tertinggi"
-            // Jika kategori biasa (diklik dari dashboard)
+
             else -> CategoryMapper.getDisplayName(categoryName)
         }
     }
 
     PromptSearchResultScreen(
-//        categoryTitle = CategoryMapper.getDisplayName(categoryName),
         categoryTitle = displayTitle,
         searchQuery = uiState.searchQuery,
         isLoading = uiState.isLoading,
@@ -89,17 +78,26 @@ fun PromptSearchResultRoute(
         onQueryChange = {
             viewModel.onQueryChange(it)
         },
-        onSearchClicked = {
-            //fun search nanti
+        onSearchClicked = { query ->
+            if (query.isNotBlank()) {
+                val cleanQuery = query.trim()
+                val searchParam = "SEARCH_NATURAL:$cleanQuery"
+                //nav ke halaman sendiri utk refresh
+                navController.navigate("PromptSearchResultScreen/$searchParam") {
+                    popUpTo("PromptSearchResultScreen/{categoryName}") { inclusive = false }
+                }
+            }
         },
         onPromptClick = { promptId ->
             navController.navigate("PromptDetailScreen/$promptId")
         }
     )
 
-
-
 }
+
+
+
+
 @Composable
 fun PromptSearchResultScreen(
     modifier: Modifier = Modifier ,
