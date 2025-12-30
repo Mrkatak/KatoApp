@@ -1,9 +1,13 @@
 package com.example.katoapp.view.screens
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,10 +16,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,19 +49,38 @@ import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.MainCategoryButton
 import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.viewModel.AdminViewModel
+import com.example.katoapp.viewModel.AuthViewModel
+import com.example.katoapp.viewModel.state.AdminTab
 
 @Composable
 fun DashboardAdminRoute(
     navController: NavController,
-    viewModel: AdminViewModel = hiltViewModel(),
-    onLogoutClick: () -> Unit
+    authViewModel: AuthViewModel = hiltViewModel(),
+    viewModel: AdminViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     DashboardAdminScreen(
         categories = uiState.categories,
-        onPromptClick = { prompt->
-            navController.navigate("PromptDetailScreen/$prompt")
+        prompts = uiState.prompts,
+        selectedMainCategory = uiState.selectedMainCategory,
+        currentTab = uiState.currentTab,
+        isLoading = uiState.isLoading,
+        onTabSelected = { tab ->
+            viewModel.changeTab(tab)
+        },
+        onCategoryClick = { cat ->
+            viewModel.selectMainCategory(cat)
+        },
+        onPromptClick = { promptId->
+            navController.navigate("PromptDetailScreen/$promptId")
+        },
+        onLogoutClick = {
+            authViewModel.logout()
+            navController.navigate("LoginScreen") {
+//                popUpTo("DashboardAdminScreen") { inclusive = true }
+                popUpTo(0)
+            }
         }
     )
 
@@ -67,11 +92,14 @@ fun DashboardAdminScreen(
     modifier: Modifier = Modifier,
     categories: List<String> = emptyList(),
     prompts: List<Prompt> = emptyList(),
+    selectedMainCategory : String,
+    currentTab: AdminTab,
+    isLoading: Boolean,
+    onTabSelected: (AdminTab) -> Unit = {},
+    onCategoryClick: (String) -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onPromptClick: (String) -> Unit = {}
 ) {
-
-    var selectedCategory by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -116,42 +144,22 @@ fun DashboardAdminScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                Button(
-                    onClick = {},
-                    shape = RoundedCornerShape(100.dp),
-                    modifier = Modifier
-                        .height(40.dp)
-                        .weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    ),
-                    elevation = ButtonDefaults.elevatedButtonElevation(2.dp)
-                ) {
-                    Text(
-                        text = "Laporan Prompt" ,
-                        style = MaterialTheme.typography.labelLarge ,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
 
-                Spacer(modifier.width(12.dp))
-                Button(
-                    onClick = {},
-                    shape = RoundedCornerShape(100.dp),
-                    modifier = Modifier
-                        .height(40.dp)
-                        .weight(1f),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    elevation = ButtonDefaults.elevatedButtonElevation(2.dp)
-                ) {
-                    Text(
-                        text = "Meninjau Prompt" ,
-                        style = MaterialTheme.typography.labelLarge ,
-                        color = MaterialTheme.colorScheme.secondary
-                    )
-                }
+                // tombol laporan
+                AdminTabButton(
+                    text = "Laporan Prompt",
+                    isSelected = (currentTab == AdminTab.REPORT),
+                    onClick = { onTabSelected(AdminTab.REPORT) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                // tombol meninjau
+                AdminTabButton(
+                    text = "Meninjau Prompt",
+                    isSelected = (currentTab == AdminTab.REVIEW),
+                    onClick = { onTabSelected(AdminTab.REVIEW) },
+                    modifier = Modifier.weight(1f)
+                )
             }
 
             Spacer(modifier.height(16.dp))
@@ -174,17 +182,18 @@ fun DashboardAdminScreen(
                 Row(
                     modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 26.dp),
+                        .padding(horizontal = 26.dp)
+                        .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     categories.forEach { dbValue ->
                         MainCategoryButton(
-                            text = CategoryMapper.getDisplayName(dbValue.toString()),
-                            icon = CategoryMapper.getIcon(dbValue.toString()),
-                            isSelected = selectedCategory,
+                            text = CategoryMapper.getDisplayName(dbValue),
+                            icon = CategoryMapper.getIcon(dbValue),
+                            isSelected = (selectedMainCategory == dbValue),
                             onClick = {
-                                //function filter prompt
+                                onCategoryClick(dbValue)
                             }
                         )
                     }
@@ -192,20 +201,37 @@ fun DashboardAdminScreen(
             }
 
             Spacer(modifier.height(24.dp))
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(prompts) { prompt->
-                    PromptCard(
-                        title = prompt.title,
-                        imageUrl = prompt.imageUrl,
-                        category = prompt.category,
-                        rating = prompt.rating,
-                        onClick = {
-                            onPromptClick(prompt.id)
-                        }
+
+            //prompt display
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (prompts.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = if(currentTab == AdminTab.REPORT) "Tidak ada laporan." else "Belum ada prompt.",
+                        color = MaterialTheme.colorScheme.secondary
                     )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 100.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    items(prompts) { prompt ->
+                        val displayCategory = CategoryMapper.getDisplayName(prompt.category)
+                        PromptCard(
+                            title = prompt.title,
+                            imageUrl = prompt.imageUrl,
+                            category = displayCategory,
+                            rating = prompt.rating.ifEmpty { "New" },
+                            onClick = { onPromptClick(prompt.id) }
+                        )
+                    }
                 }
             }
         }
@@ -215,12 +241,43 @@ fun DashboardAdminScreen(
 }
 
 
-@Preview
 @Composable
-private fun View() {
-    DashboardAdminScreen(
-        categories = listOf("Teks", "Gambar", "Video", "Suara")
-    )
+fun AdminTabButton(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
 
-
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(100.dp),
+        modifier = modifier.height(40.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = containerColor,
+            contentColor = contentColor
+        ),
+        elevation = ButtonDefaults.elevatedButtonElevation(if (isSelected) 4.dp else 0.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1
+        )
+    }
 }
+
+
+//@Preview
+//@Composable
+//private fun View() {
+//    DashboardAdminScreen(
+//        categories = listOf("Teks", "Gambar", "Video", "Suara"),
+//        selectedMainCategory = List("Teks", "Gambar", "Video", "Suara"),
+//
+//    )
+//
+//
+//}

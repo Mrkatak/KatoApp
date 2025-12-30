@@ -118,4 +118,24 @@ class PromptDetailViewModel @Inject constructor(
             }
         }
     }
+
+    //function report prompt
+    fun reportPrompt(reason: String) {
+        val currentPrompt = _uiState.value.prompt ?: return
+
+        viewModelScope.launch {
+            // Tampilkan loading jika perlu, atau biarkan background
+            val success = repository.reportPrompt(currentPrompt, reason)
+
+            if (success) {
+                _uiState.update { it.copy(bookmarkMessage = "Laporan berhasil dikirim. Terima kasih.") }
+            } else {
+                _uiState.update { it.copy(bookmarkMessage = "Gagal mengirim laporan.") }
+            }
+
+            // Reset pesan toast
+            kotlinx.coroutines.delay(100)
+            _uiState.update { it.copy(bookmarkMessage = null) }
+        }
+    }
 }

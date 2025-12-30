@@ -5,7 +5,6 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -48,7 +47,7 @@ fun SharingPromptRoute(
         selectedMainCategory = uiState.selectedMainCategory,
         selectedCategories = uiState.selectedCategories,
 
-        promptList = uiState.popularPrompts,
+        promptList = uiState.prompts,
         isLoading = uiState.isLoading,
         onQueryChange = { viewModel.onQueryChange(it) },
 

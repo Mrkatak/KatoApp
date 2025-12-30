@@ -109,8 +109,8 @@ fun PromptDetailRoute(
                     viewModel.updateRating(rating)
                     Toast.makeText(context, "Terima kasih!", Toast.LENGTH_SHORT).show()
                 },
-                onReportClick = {
-                    Toast.makeText(context, "Laporan terkirim", Toast.LENGTH_SHORT).show()
+                onReportClick = { reason ->
+                    viewModel.reportPrompt(reason)
                 }
             )
         }
@@ -130,7 +130,7 @@ fun PromptDetailScreen(
     onSaveClick: () -> Unit,
     onCopyClick: (String) -> Unit,
     onRatingSubmit: (Int) -> Unit,
-    onReportClick: () -> Unit
+    onReportClick: (String) -> Unit
 ) {
     val clipboardManager = LocalClipboardManager.current
     val context = LocalContext.current
@@ -150,8 +150,10 @@ fun PromptDetailScreen(
     val displayCategory = CategoryMapper.getDisplayName(data.category)
 
     var isPromptExpanded by remember { mutableStateOf(false) }
-
     var showImagePreview by remember { mutableStateOf(false) }
+
+    var showReportDialog by remember { mutableStateOf(false) }
+    var reportReason by remember { mutableStateOf("") }
 
     //full screen image
     if (showImagePreview) {
@@ -256,6 +258,44 @@ fun PromptDetailScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showRatingDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    if (showReportDialog) {
+        AlertDialog(
+            onDismissRequest = { showReportDialog = false },
+            title = { Text("Laporkan Prompt") },
+            text = {
+                Column {
+                    Text("Mengapa Anda melaporkan prompt ini?", style = MaterialTheme.typography.bodyMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = reportReason,
+                        onValueChange = { reportReason = it },
+                        label = { Text("Alasan") },
+                        placeholder = { Text("Contoh: Konten kasar, Spam...") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (reportReason.isNotEmpty()) {
+                            onReportClick(reportReason) // Kirim alasan ke ViewModel
+                            showReportDialog = false
+                            reportReason = "" // Reset form
+                        }
+                    }
+                ) {
+                    Text("Kirim")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReportDialog = false }) {
                     Text("Batal")
                 }
             }
@@ -667,7 +707,9 @@ fun PromptDetailScreen(
             //tombol report
             if (!isOwner) {
                 TextButton(
-                    onClick = onReportClick
+                    onClick = {
+                        showReportDialog = true
+                    }
                 ) {
                     Text(
                         text = "Laporkan prompt",

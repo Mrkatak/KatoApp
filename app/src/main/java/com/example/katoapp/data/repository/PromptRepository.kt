@@ -652,7 +652,81 @@ class PromptRepository @Inject constructor(
         }
     }
 
+    //function get reported prompt
+    suspend fun getReportedPrompts(): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("ReportedPrompt")
+                .orderBy("TanggalLaporan", Query.Direction.ASCENDING)
+                .get()
+                .await()
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
 
+    //function get all prompt in admin
+    suspend fun getAllSharingPrompts(): List<Prompt> {
+        return try {
+            val snapshot = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .orderBy("Tanggal", Query.Direction.DESCENDING)
+                .get()
+                .await()
+            mapSnapshotToPromptList(snapshot)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
+    }
+
+    //function report prompt
+    suspend fun reportPrompt(prompt: Prompt, reason: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val currentUser = auth.currentUser ?: return@withContext false
+
+                // UPDATE: Gunakan nama field yang SAMA dengan Prompt biasa
+                // agar bisa dibaca oleh mapDocumentToPrompt nanti
+                val reportData = hashMapOf(
+                    // Info Prompt Asli
+                    "id" to prompt.id, // Simpan ID Asli di dalam field
+                    "Judul" to prompt.title,
+                    "Prompt" to prompt.content,
+                    "LinkGambar" to prompt.imageUrl, // Samakan nama field gambar
+                    "KategoriUtama" to prompt.category,
+                    "Rating" to prompt.rating,
+
+                    // Info Pemilik Prompt
+                    "UserId" to prompt.userId, // ID Pemilik
+
+                    // Info Pelapor
+                    "ReporterId" to currentUser.uid,
+                    "ReporterName" to (currentUser.displayName ?: "User"),
+                    "Reason" to reason,
+
+                    "StatusLaporan" to "Pending",
+                    "TanggalLaporan" to FieldValue.serverTimestamp() // Untuk sorting laporan
+                )
+
+                // Simpan ke Admin -> ReportedPrompt
+                firestore.collection("admin")
+                    .document(adminDocId)
+                    .collection("ReportedPrompt")
+                    .add(reportData)
+                    .await()
+
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+    }
 
     //map helper
     private fun mapSnapshotToPromptList(snapshot: com.google.firebase.firestore.QuerySnapshot): List<Prompt> {
@@ -674,8 +748,10 @@ class PromptRepository @Inject constructor(
             }
             return emptyList()
         }
+        val originalId = doc.getString("id") ?: doc.getString("PromptId") ?: doc.id
         return Prompt(
-            id = doc.id,
+//            id = doc.id,
+            id = originalId,
             title = getField("Judul"),
             imageUrl = getField("LinkGambar"),
             category = getField("KategoriUtama", "MainKategori"),
@@ -685,7 +761,8 @@ class PromptRepository @Inject constructor(
             content = getField("Prompt"),
             rating = getField("Rating").ifEmpty { "New" },
             status = getField("Status"),
-            createdAt = doc.getDate("Tanggal"),
+//            createdAt = doc.getDate("Tanggal"),
+            createdAt = doc.getDate("Tanggal") ?: doc.getDate("TanggalLaporan"),
             usageCount = doc.getLong("UsageCount")?.toInt() ?: 0,
             userId = getField("UserId"),
             username = getField("Username", "UserEmail")

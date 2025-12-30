@@ -65,7 +65,7 @@ class SharingPromptViewModel @Inject constructor(
                     categories = mainCats,
                     generalCategories = generalCats,
                     selectedMainCategory = "",
-                    popularPrompts = allLatestPrompts
+                    prompts = allLatestPrompts
                 )
             }
         }
@@ -83,7 +83,7 @@ class SharingPromptViewModel @Inject constructor(
 
             currentState.copy(
                 selectedMainCategory = newSelection,
-                popularPrompts = filteredList
+                prompts = filteredList
             )
         }
     }
@@ -101,7 +101,7 @@ class SharingPromptViewModel @Inject constructor(
 
             currentState.copy(
                 selectedCategories = currentList,
-                popularPrompts = filteredList
+                prompts = filteredList
             )
         }
     }

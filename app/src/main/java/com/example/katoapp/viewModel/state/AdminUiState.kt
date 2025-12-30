@@ -7,5 +7,13 @@ data class AdminUiState(
     val errorMessage: String? = null,
     val successMessage: String? = null,
     val prompts: List<Prompt> = emptyList(),
-    val categories: List<String> = emptyList()
+    val categories: List<String> = emptyList(),
+    val currentTab: AdminTab = AdminTab.REPORT,
+    val selectedMainCategory: String = "",
+    val rawPrompts: List<Prompt> = emptyList()
 )
+
+enum class AdminTab {
+    REPORT,
+    REVIEW
+}
