@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
@@ -628,7 +629,7 @@ class PromptRepository @Inject constructor(
 
             batch.update(privateRef, updateData)
 
-            // B. Logic Sharing (Admin)
+            //update di admin
             val adminRef = firestore.collection("admin")
                 .document(adminDocId)
                 .collection("SharingPrompt")
@@ -728,8 +729,109 @@ class PromptRepository @Inject constructor(
         }
     }
 
+    //fun pengguna delete prompt
+    suspend fun deletePrompt(promptId: String, imageUrl: String) {
+        withContext(Dispatchers.IO) {
+            val currentUser = auth.currentUser ?: throw Exception("User belum login")
+            if (imageUrl.isNotEmpty()) {
+                cloudinaryHelper.deleteImage(imageUrl)
+            }
+            val batch = firestore.batch()
+
+            //hapus di pengguna (PrivatePrompt)
+            val privateRef = firestore.collection("pengguna")
+                .document(currentUser.uid)
+                .collection("PrivatePrompt")
+                .document(promptId)
+            batch.delete(privateRef)
+
+            //hapus di admin (SharedPrompt)
+            val sharingRef = firestore.collection("admin")
+                .document(adminDocId)
+                .collection("SharingPrompt")
+                .document(promptId)
+            batch.delete(sharingRef)
+
+            //batch
+            batch.commit().await()
+        }
+    }
+
+    //fun admin delete prompt
+    suspend fun adminDeletePrompt(promptId: String, ownerId: String, imageUrl: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                if (imageUrl.isNotEmpty()) {
+                    cloudinaryHelper.deleteImage(imageUrl)
+                }
+
+                val batch = firestore.batch()
+
+                //delete from admin (SharingPrompt)
+                val sharingRef = firestore.collection("admin")
+                    .document(adminDocId)
+                    .collection("SharingPrompt")
+                    .document(promptId)
+                batch.delete(sharingRef)
+
+                //delete from pengguna
+                if (ownerId.isNotEmpty()) {
+                    val privateRef = firestore.collection("pengguna")
+                        .document(ownerId)
+                        .collection("PrivatePrompt")
+                        .document(promptId)
+                    batch.delete(privateRef)
+                }
+
+                //delete from admin (ReportedPrompt)
+                val reportQuery = firestore.collection("admin")
+                    .document(adminDocId)
+                    .collection("ReportedPrompt")
+                    .whereEqualTo("id", promptId) //by promptId
+                    .get()
+                    .await()
+
+                for (doc in reportQuery.documents) {
+                    batch.delete(doc.reference)
+                }
+                //use batch
+                batch.commit().await()
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+    }
+
+    //fun dismiss report
+    suspend fun dismissReport(promptId: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val batch = firestore.batch()
+                val reportQuery = firestore.collection("admin")
+                    .document(adminDocId)
+                    .collection("ReportedPrompt")
+                    .whereEqualTo("id", promptId)
+                    .get()
+                    .await()
+
+                //delete from admin (ReportedPrompt)
+                for (doc in reportQuery.documents) {
+                    batch.delete(doc.reference)
+                }
+                //batch
+                batch.commit().await()
+                true
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+    }
+
     //map helper
-    private fun mapSnapshotToPromptList(snapshot: com.google.firebase.firestore.QuerySnapshot): List<Prompt> {
+    private fun mapSnapshotToPromptList(snapshot: QuerySnapshot): List<Prompt> {
         return snapshot.documents.map { doc -> mapDocumentToPrompt(doc) }
     }
 

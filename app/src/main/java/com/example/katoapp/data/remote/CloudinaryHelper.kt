@@ -2,9 +2,11 @@ package com.example.katoapp.data.remote
 
 import android.content.Context
 import android.net.Uri
+import com.cloudinary.Cloudinary
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
+import com.cloudinary.utils.ObjectUtils
 import com.example.katoapp.utils.ImageUtils
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +25,8 @@ class CloudinaryHelper @Inject constructor(
 
     private val myCloudName = "der6c348w"
     private val myUploadPreset = "kato_preset"
+    private val myApiKey = "135933964164896"
+    private val myApiSecret = "a8Trzvx7UUVCIqsLKyCEjsyv488"
 
     private fun initMediaManager() {
         try {
@@ -96,6 +100,53 @@ class CloudinaryHelper @Inject constructor(
 
     // function Upload Gambar tanpa kompres
     // fun uploadImage()
+
+    // function delete image
+    suspend fun deleteImage(imageUrl: String): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                //setup cloudinary api
+                val cloudinary = Cloudinary(
+                    mapOf(
+                        "cloud_name" to myCloudName ,
+                        "api_key" to myApiKey ,
+                        "api_secret" to myApiSecret
+                    )
+                )
+
+                //get public id from url
+                val publicId = getPublicIdFromUrl(imageUrl)
+
+                if (publicId.isNotEmpty()) {
+                    //api destroy
+                    cloudinary.uploader().destroy(publicId, ObjectUtils.emptyMap())
+                    true
+                } else {
+                    false
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+        }
+    }
+
+    //get url
+    private fun getPublicIdFromUrl(url: String): String {
+        return try {
+            //folder "kato_prompts"
+            val folderIndex = url.indexOf("kato_prompts/")
+            if (folderIndex != -1) {
+                val path = url.substring(folderIndex)
+                //hapus ekstensi .jpg, .png)
+                path.substringBeforeLast(".")
+            } else {
+                ""
+            }
+        } catch (e: Exception) {
+            ""
+        }
+    }
 }
 
 //class Helper sebagai kamus error

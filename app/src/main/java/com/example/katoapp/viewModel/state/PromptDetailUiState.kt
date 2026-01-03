@@ -8,5 +8,6 @@ data class PromptDetailUiState(
     val error: String? = null,
     val isOwner: Boolean = false,
     val isSaved: Boolean = false,
-    val bookmarkMessage: String? = null
+    val bookmarkMessage: String? = null,
+    val isReportContext: Boolean = false
 )

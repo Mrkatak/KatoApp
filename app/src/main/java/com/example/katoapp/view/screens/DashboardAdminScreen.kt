@@ -73,7 +73,8 @@ fun DashboardAdminRoute(
             viewModel.selectMainCategory(cat)
         },
         onPromptClick = { promptId->
-            navController.navigate("PromptDetailScreen/$promptId")
+            val isReportContext = (uiState.currentTab == AdminTab.REPORT)
+            navController.navigate("PromptDetailsReportScreen/$promptId/$isReportContext")
         },
         onLogoutClick = {
             authViewModel.logout()
@@ -259,7 +260,9 @@ fun AdminTabButton(
             containerColor = containerColor,
             contentColor = contentColor
         ),
-        elevation = ButtonDefaults.elevatedButtonElevation(if (isSelected) 4.dp else 0.dp)
+        elevation = ButtonDefaults.elevatedButtonElevation(
+            if (isSelected) 4.dp else 0.dp
+        )
     ) {
         Text(
             text = text,
@@ -270,14 +273,53 @@ fun AdminTabButton(
 }
 
 
-//@Preview
-//@Composable
-//private fun View() {
-//    DashboardAdminScreen(
-//        categories = listOf("Teks", "Gambar", "Video", "Suara"),
-//        selectedMainCategory = List("Teks", "Gambar", "Video", "Suara"),
-//
-//    )
-//
-//
-//}
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun View() {
+    val dummyCategories = listOf(
+        "Text to Text",
+        "Text to Image",
+        "Text to Video",
+        "Text to Speech"
+    )
+
+    val dummyPrompts = listOf(
+        Prompt(
+            id = "1",
+            title = "Teks Cara Menjadi Presiden",
+            imageUrl = "",
+            category = "Text to Text",
+            rating = "4.5",
+            status = "sharing"
+        ),
+        Prompt(
+            id = "2",
+            title = "Gambar Indonesia Era Kegelapan",
+            imageUrl = "",
+            category = "Text to Image",
+            rating = "New",
+            status = "sharing"
+        ),
+        Prompt(
+            id = "3",
+            title = "Video Mengenakan Setelan Jas dan Dasi",
+            imageUrl = "",
+            category = "Text to Video",
+            rating = "3.0",
+            status = "sharing"
+        )
+    )
+
+    DashboardAdminScreen(
+        categories = dummyCategories,
+        prompts = dummyPrompts,
+        selectedMainCategory = "Text to Text",
+        currentTab = AdminTab.REPORT,
+        isLoading = false,
+        onTabSelected = {},
+        onCategoryClick = {},
+        onLogoutClick = {},
+        onPromptClick = {}
+    )
+}
+

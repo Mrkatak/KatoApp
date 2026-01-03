@@ -61,6 +61,7 @@ fun PromptEditRoute(
         if (uiState.isSuccess) {
             Toast.makeText(context, "Berhasil diperbarui!", Toast.LENGTH_SHORT).show()
             navController.popBackStack()
+            viewModel.resetSuccessState()
         }
     }
 
@@ -79,6 +80,15 @@ fun PromptEditRoute(
             onImageClick = { imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
             onSaveClick = { title, content, mainCat, model, ver, subCats, sharing ->
                 viewModel.updatePrompt(title, content, mainCat, subCats, model, ver, sharing)
+            },
+            onDeleteClick = {
+                viewModel.deletePrompt(
+                    onSuccess = {
+                        Toast.makeText(context, "Prompt dihapus", Toast.LENGTH_SHORT).show()
+                        navController.popBackStack()
+                        navController.popBackStack()
+                    }
+                )
             }
         )
     }
@@ -96,7 +106,8 @@ fun PromptEditScreen(
     onImageClick: () -> Unit ,
     categories: List<String> ,
     generalCategories: List<String> ,
-    isLoading: Boolean = false
+    isLoading: Boolean = false,
+    onDeleteClick: () -> Unit
 ) {
     // State Lokal Form
     var title by remember { mutableStateOf(initialData.title) }
@@ -109,6 +120,37 @@ fun PromptEditScreen(
     var selectedGeneralCategories by remember { mutableStateOf(initialData.subCategories) }
 
     var isSharing by remember { mutableStateOf(initialData.status == "sharing") }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text("Hapus Prompt?")
+            },
+            text = {
+                Text("Apakah Anda yakin ingin menghapus prompt ini?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDeleteClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) { Text("Ya, Hapus") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -373,7 +415,7 @@ fun PromptEditScreen(
                 ) {
                     Button(
                         onClick = {
-                            //function hapus
+                            showDeleteDialog = true
                         },
                         modifier = Modifier
                             .weight(1f)
@@ -469,7 +511,8 @@ fun PromptEditPreview() {
         generalCategories = listOf("Teknologi", "Seni"),
         onBackClick = {},
         onSaveClick = { _, _, _, _, _, _, _ -> },
-        onImageClick = {}
+        onImageClick = {},
+        onDeleteClick = {}
     )
 }
 

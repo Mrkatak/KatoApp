@@ -66,10 +66,6 @@ fun AddPromptRoute(
             navController.popBackStack()
             viewModel.resetSuccessState()
         }
-
-        if (uiState.errorMessage != null) {
-            Toast.makeText(context, uiState.errorMessage, Toast.LENGTH_LONG).show()
-        }
     }
 
 

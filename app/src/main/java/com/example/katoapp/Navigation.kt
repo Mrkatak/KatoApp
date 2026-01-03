@@ -29,6 +29,7 @@ import com.example.katoapp.view.screens.DashboardUserRoute
 import com.example.katoapp.view.screens.LoginRoute
 import com.example.katoapp.view.screens.ProfileScreen
 import com.example.katoapp.view.screens.PromptDetailRoute
+import com.example.katoapp.view.screens.PromptDetailsReportRoute
 import com.example.katoapp.view.screens.PromptEditRoute
 import com.example.katoapp.view.screens.PromptSearchResultRoute
 import com.example.katoapp.view.screens.RegisterRoute
@@ -137,6 +138,18 @@ fun Navigation(
 
         composable("DashboardAdminScreen") {
             DashboardAdminRoute(
+                navController = rootNavController
+            )
+        }
+
+        composable(
+            route = "PromptDetailsReportScreen/{promptId}/{isReportContext}",
+            arguments = listOf(
+                navArgument("promptId") { type = NavType.StringType },
+                navArgument("isReportContext") { type = NavType.BoolType }
+            )
+        ) {
+            PromptDetailsReportRoute(
                 navController = rootNavController
             )
         }

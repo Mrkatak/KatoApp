@@ -25,6 +25,9 @@ class PromptDetailViewModel @Inject constructor(
     val uiState: StateFlow<PromptDetailUiState> = _uiState.asStateFlow()
 
     init {
+        val isReportContext: Boolean = savedStateHandle["isReportContext"] ?: false
+        _uiState.update { it.copy(isReportContext = isReportContext) }
+
         val promptId: String? = savedStateHandle["promptId"]
         if (promptId != null) {
             loadPromptDetail(promptId)
@@ -41,7 +44,6 @@ class PromptDetailViewModel @Inject constructor(
     //function load prompt detail
     private fun loadPromptDetail(id: String) {
         viewModelScope.launch {
-//            _uiState.update { it.copy(isLoading = true) }
             val result = repository.getPromptById(id)
             val savedStatus = repository.isPromptSaved(id)
 
@@ -134,8 +136,45 @@ class PromptDetailViewModel @Inject constructor(
             }
 
             // Reset pesan toast
-            kotlinx.coroutines.delay(100)
+            delay(100)
             _uiState.update { it.copy(bookmarkMessage = null) }
         }
     }
+
+    //function delete prompt
+    fun adminDeletePrompt(onSuccess: () -> Unit) {
+        val prompt = _uiState.value.prompt ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val success = repository.adminDeletePrompt(prompt.id, prompt.userId, prompt.imageUrl)
+
+            if (success) {
+                onSuccess()//pop back stack
+            } else {
+                _uiState.update { it.copy(isLoading = false, bookmarkMessage = "Gagal menghapus prompt") }
+                delay(1000)
+                _uiState.update { it.copy(bookmarkMessage = null) }
+            }
+        }
+    }
+
+    //function dismiss report
+    fun dismissReport(onSuccess: () -> Unit) {
+        val prompt = _uiState.value.prompt ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val success = repository.dismissReport(prompt.id)
+
+            if (success) {
+                onSuccess()
+            } else {
+                _uiState.update { it.copy(isLoading = false, bookmarkMessage = "Gagal memproses") }
+                delay(1000)
+                _uiState.update { it.copy(bookmarkMessage = null) }
+            }
+        }
+    }
+
+
+
 }

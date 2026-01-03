@@ -171,6 +171,23 @@ class PromptOrgViewModel @Inject constructor(
         }
     }
 
+    //fun delete prompt
+    fun deletePrompt(onSuccess: () -> Unit) {
+        val currentPrompt = _uiState.value.promptData ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                repository.deletePrompt(currentPrompt.id, currentPrompt.imageUrl)
+                _uiState.update { it.copy(isLoading = false) }
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.update {
+                    it.copy(isLoading = false, errorMessage = "Gagal menghapus: ${e.message}")
+                }
+            }
+        }
+    }
+
     //reset state
     fun resetSuccessState() {
         _uiState.update { it.copy(isSuccess = false) }
