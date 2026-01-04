@@ -27,6 +27,7 @@ import com.example.katoapp.view.screens.DashboardAdminRoute
 import com.example.katoapp.view.screens.DashboardAdminScreen
 import com.example.katoapp.view.screens.DashboardUserRoute
 import com.example.katoapp.view.screens.LoginRoute
+import com.example.katoapp.view.screens.ProfileRoute
 import com.example.katoapp.view.screens.ProfileScreen
 import com.example.katoapp.view.screens.PromptDetailRoute
 import com.example.katoapp.view.screens.PromptDetailsReportRoute
@@ -236,20 +237,8 @@ fun MainUserScreen(
                 )
             }
             composable(BottomNavItem.Profil.route) {
-                ProfileScreen(
-                    onLogoutClick = {
-
-                        println("Tombol Logout ditekan!")
-                        // Hapus Sesi
-                        viewModel.logout()
-
-                        // 2. Navigasi pakai ROOT NavController (Induk)
-                        // Karena Si Induk-lah yang tahu jalan ke "LoginScreen"
-                        rootNavController.navigate("LoginScreen") {
-                            popUpTo("MainUserScreen") {inclusive = true}
-                        }
-                    }
-
+                ProfileRoute(
+                    navController = rootNavController
                 )
             }
         }

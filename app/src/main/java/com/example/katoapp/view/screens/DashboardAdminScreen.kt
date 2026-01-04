@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -28,6 +29,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -102,6 +104,54 @@ fun DashboardAdminScreen(
     onPromptClick: (String) -> Unit = {}
 ) {
 
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    //alert dialog logout
+    if (showLogoutDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutDialog = false},
+            title = {
+                Text(
+                    text = "Konfirmasi Logout" ,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            },
+            text = {
+                Text(text = "Apakah Anda yakin ingin logout akun?")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutDialog = false
+                        onLogoutClick()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
+                ) {
+                    Text(
+                        text = "Keluar" ,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutDialog = false}
+                ) {
+                    Text(
+                        text = "Batal" ,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+        )
+    }
+
+
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -115,7 +165,7 @@ fun DashboardAdminScreen(
                 },
                 actions = {
                     IconButton(
-                        onClick = onLogoutClick
+                        onClick = { showLogoutDialog = true }
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_logout),
@@ -162,8 +212,9 @@ fun DashboardAdminScreen(
                     modifier = Modifier.weight(1f)
                 )
             }
-
             Spacer(modifier.height(16.dp))
+
+            //tombol kategori utama
             Column(
                 modifier
                     .fillMaxWidth(),
@@ -302,7 +353,7 @@ private fun View() {
         ),
         Prompt(
             id = "3",
-            title = "Video Mengenakan Setelan Jas dan Dasi",
+            title = "Video Tikus Mengenakan Setelan Jas dan Dasi",
             imageUrl = "",
             category = "Text to Video",
             rating = "3.0",
