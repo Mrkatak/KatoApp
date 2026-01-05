@@ -1,6 +1,7 @@
 package com.example.katoapp.view.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
@@ -19,8 +20,12 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.zIndex
 import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.GeneralCategoryButton
@@ -28,6 +33,7 @@ import com.example.katoapp.view.component.MainCategoryButton
 import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.view.component.SearchBar
 import com.example.katoapp.viewModel.SharingPromptViewModel
+import com.example.katoapp.R
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -36,7 +42,6 @@ fun SharingPromptRoute(
     viewModel: SharingPromptViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
 
     SharingPromptScreen(
         searchQuery = uiState.searchQuery,
@@ -49,7 +54,15 @@ fun SharingPromptRoute(
 
         promptList = uiState.prompts,
         isLoading = uiState.isLoading,
+        suggestions = uiState.suggestions,
         onQueryChange = { viewModel.onQueryChange(it) },
+
+        onSuggestionClick = { suggestion ->
+            viewModel.onSuggestionClick(suggestion)
+             val cleanQuery = suggestion.trim()
+             val searchParam = "SEARCH_NATURAL:$cleanQuery"
+             navController.navigate("PromptSearchResultScreen/$searchParam")
+        },
 
         onMainCategoryClick = { dbValue ->
             viewModel.setMainCategory(dbValue)
@@ -65,9 +78,9 @@ fun SharingPromptRoute(
                 navController.navigate("PromptSearchResultScreen/$searchParam")
             }
         },
+
         //navigasi
-        onPromptClick = { id -> navController.navigate("PromptDetailScreen/$id") },
-        onBackClick = { navController.popBackStack() }
+        onPromptClick = { id -> navController.navigate("PromptDetailScreen/$id") }
     )
 }
 
@@ -75,6 +88,7 @@ fun SharingPromptRoute(
 @Composable
 fun SharingPromptScreen(
     searchQuery: String,
+    suggestions: List<String>,
     categories: List<String>,
     generalCategories: List<String>,
     selectedMainCategory: String,
@@ -83,10 +97,10 @@ fun SharingPromptScreen(
     isLoading: Boolean,
     onQueryChange: (String) -> Unit,
     onSearchClicked: (String) -> Unit,
+    onSuggestionClick: (String) -> Unit,
     onMainCategoryClick: (String) -> Unit,
     onCategoryToggle: (String) -> Unit,
     onPromptClick: (String) -> Unit,
-    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 
 ) {
@@ -97,18 +111,68 @@ fun SharingPromptScreen(
             .background(color = MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.Start
     ) {
-
         Spacer(modifier = Modifier.height(36.dp))
 
-        //Search Bar
-        SearchBar(
-            query = searchQuery,
-            onQueryChange = onQueryChange,
-            onSearchClicked = { onSearchClicked(searchQuery) },
+        //search bar
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 26.dp)
-        )
+                .zIndex(1f)
+        ) {
+            Column {
+                SearchBar(
+                    query = searchQuery,
+                    onQueryChange = onQueryChange,
+                    onSearchClicked = { onSearchClicked(searchQuery) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                //suggestion list
+                if (suggestions.isNotEmpty() && searchQuery.isNotEmpty()) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        shadowElevation = 4.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    ) {
+                        Column {
+                            suggestions.forEach { suggestion ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { onSuggestionClick(suggestion) }
+                                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.ic_search) ,
+                                        contentDescription = null,
+                                        tint = Color.Gray,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Text(
+                                        text = suggestion,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+
+                                if (suggestion != suggestions.last()) {
+                                    HorizontalDivider(
+                                        thickness = 0.5.dp ,
+                                        color = Color.LightGray.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         Spacer(modifier.height(16.dp))
         Column(
@@ -146,7 +210,6 @@ fun SharingPromptScreen(
                     }
                 }
             }
-
             Spacer(modifier.height(16.dp))
 
             //general category chip button
@@ -184,7 +247,6 @@ fun SharingPromptScreen(
                     }
                 }
             }
-
             Spacer(modifier.height(16.dp))
 
             //list prompt terbaru
@@ -207,9 +269,9 @@ fun SharingPromptScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 100.dp, top = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 16.dp, top = 16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(promptList) { prompt ->
@@ -230,6 +292,7 @@ fun SharingPromptScreen(
 
     }
 }
+
 
 val dummyPromptsForPreview = listOf(
     Prompt(
@@ -260,23 +323,22 @@ val dummyPromptsForPreview = listOf(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun SharingPromptScreenPreview() {
-    MaterialTheme {
-        SharingPromptScreen(
-            searchQuery = "Logo",
-            categories = listOf("Text to Text", "Text to Image", "Text to Video", "Text to Speech"),
-            generalCategories = listOf("Bisnis", "Hiburan", "Pendidikan", "Teknologi", "Seni"),
-            selectedMainCategory = "Text to Image",
-            selectedCategories = listOf("Bisnis"),
-            isLoading = false,
-            onQueryChange = {},
-            onSearchClicked = {},
-            onMainCategoryClick = {},
-            onCategoryToggle = {},
-            onPromptClick = {},
-            onBackClick = {},
-            promptList = dummyPromptsForPreview
-        )
-    }
+private fun View() {
+    SharingPromptScreen(
+        searchQuery = "Logo",
+        categories = listOf("Text to Text", "Text to Image", "Text to Video", "Text to Speech"),
+        generalCategories = listOf("Bisnis", "Hiburan", "Pendidikan", "Teknologi", "Seni"),
+        selectedMainCategory = "Text to Image",
+        selectedCategories = listOf("Bisnis"),
+        isLoading = false,
+        onQueryChange = {},
+        onSearchClicked = {},
+        onMainCategoryClick = {},
+        onCategoryToggle = {},
+        onPromptClick = {},
+        promptList = dummyPromptsForPreview,
+        suggestions = emptyList(),
+        onSuggestionClick = {}
+    )
 }
 

@@ -42,6 +42,7 @@ import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.viewModel.SavePromptViewModel
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.navigation.NavController
+import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.viewModel.state.SavePromptUiState
 
 @Composable
@@ -53,11 +54,9 @@ fun SavePromptRoute(
 
     SavePromptScreen(
         uiState = uiState,
-        // Event Ganti Filter
         onFilterChanged = { filter ->
             viewModel.onFilterChanged(filter)
         },
-        // Event Refresh
         onRefresh = {
             viewModel.onRefresh()
         },
@@ -74,7 +73,6 @@ fun SavePromptRoute(
 fun SavePromptScreen(
     modifier: Modifier = Modifier,
     uiState: SavePromptUiState,
-    viewModel: SavePromptViewModel = hiltViewModel(),
     onRefresh: () -> Unit,
     onFilterChanged: (String) -> Unit,
     onPromptClick: (String) -> Unit
@@ -93,6 +91,7 @@ fun SavePromptScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
+            //button private, sharing, simpan
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -102,31 +101,31 @@ fun SavePromptScreen(
                     text = "Private",
                     icon = R.drawable.ic_teks,
                     isSelected = uiState.selectedFilter == "Private",
-                    onClick = { viewModel.onFilterChanged("Private") }
+                    onClick = { onFilterChanged("Private") }
                 )
 
                 FilterButton(
                     text = "Sharing",
                     icon = R.drawable.ic_teks,
                     isSelected = uiState.selectedFilter == "Sharing",
-                    onClick = { viewModel.onFilterChanged("Sharing") }
+                    onClick = { onFilterChanged("Sharing") }
                 )
 
                 FilterButton(
                     text = "Simpan",
                     icon = R.drawable.ic_teks,
                     isSelected = uiState.selectedFilter == "Simpan",
-                    onClick = { viewModel.onFilterChanged("Simpan") }
+                    onClick = { onFilterChanged("Simpan") }
                 )
             }
-
             Spacer(modifier = Modifier.height(24.dp))
+
+            //swipe to refresh
             PullToRefreshBox(
                 isRefreshing = uiState.isRefreshing,
-                onRefresh = { viewModel.onRefresh() },
+                onRefresh = { onRefresh() },
                 modifier = Modifier.weight(1f)
             ) {
-
                 if (uiState.isLoading && !uiState.isRefreshing) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
@@ -146,11 +145,13 @@ fun SavePromptScreen(
                         )
                     }
                 } else {
+
+                    //prompt list
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        contentPadding = PaddingValues(bottom = 100.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(bottom = 16.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
                         items(uiState.prompts) { prompt ->
@@ -169,6 +170,9 @@ fun SavePromptScreen(
                 }
             }
         }
+
+
+
     }
 }
 
@@ -214,17 +218,26 @@ fun FilterButton(
 
 
 
-//@Preview
-//@Composable
-//private fun View() {
-//    SavePromptScreen(
-//        uiState = {},
-//        // Event Ganti Filter
-//        onFilterChanged = {},
-//        // Event Refresh
-//        onRefresh = { },
-//        // Event Klik Card -> Navigasi ke Detail
-//        onPromptClick = { }
-//    )
-//
-//}
+@Preview
+@Composable
+private fun View() {
+    val dummyPrompts = listOf(
+        Prompt(title = "Logo Kelompok Penerbang Roket" , category = "Text to Image" , rating = "4.5") ,
+        Prompt(title = "Tutorial Menebang Pohon", category = "Text to Text", rating = "5.0"),
+        Prompt(title = "Video Makan Bergizi Gratis", category = "Text to Video", rating = "New"),
+    )
+
+    val dummyState = SavePromptUiState(
+        isLoading = false,
+        selectedFilter = "Private",
+        prompts = dummyPrompts
+    )
+    
+    SavePromptScreen(
+        uiState = dummyState,
+        onFilterChanged = {},
+        onRefresh = { },
+        onPromptClick = { }
+    )
+
+}

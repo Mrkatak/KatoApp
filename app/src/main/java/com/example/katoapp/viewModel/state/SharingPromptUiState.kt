@@ -10,6 +10,8 @@ data class SharingPromptUiState (
     //search state
     val searchQuery: String = "" ,
 
+    val suggestions: List<String> = emptyList(),
+
     //list data
     val categories: List<String> = emptyList() ,
     val generalCategories: List<String> = emptyList() ,

@@ -327,8 +327,8 @@ private fun View() {
     ProfileScreen(
         onLogoutClick = {},
         onHelpClick = {},
-        username = "Beben",
-        email = "beben&yoga@gmail.com",
+        username = "Pengguna01",
+        email = "pengguna01@gmail.com",
         sharedCount = 99,
         savedCount = 99,
         likedCount = 99

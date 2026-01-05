@@ -5,6 +5,7 @@ import com.example.katoapp.data.model.Prompt
 data class SearchUiState(
     val isLoading: Boolean = false,
     val searchQuery: String = "",
+    val suggestions: List<String> = emptyList(),
     val generalCategories: List<String> = emptyList(),
     val selectedCategories: List<String> = emptyList(),
     val searchResults: List<Prompt> = emptyList()

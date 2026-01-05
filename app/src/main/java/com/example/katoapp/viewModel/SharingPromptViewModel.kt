@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.min
 
 @HiltViewModel
 class SharingPromptViewModel @Inject constructor(
@@ -71,15 +72,75 @@ class SharingPromptViewModel @Inject constructor(
         }
     }
 
-    // Update Text SearchBar
+    //onQueryChange
     fun onQueryChange(newQuery: String) {
         _uiState.update { it.copy(searchQuery = newQuery) }
+
+        //filter suggestion
+        if (newQuery.length >= 2) { //minimal 2 huruf
+            val cleanQuery = newQuery.trim().lowercase()
+            val filteredSuggestions = allLatestPrompts.filter { prompt ->
+                val title = prompt.title.lowercase()
+
+                //isMatch or isFuzzy
+                val isMatch = title.contains(cleanQuery)
+                val isFuzzy = if (!isMatch) hasTypoMatch(title, cleanQuery) else false
+
+                isMatch || isFuzzy
+            }
+                .map { it.title } //get tittle
+                .take(5) //take 5 suggestion
+
+            _uiState.update { it.copy(suggestions = filteredSuggestions) }
+        } else {
+            _uiState.update { it.copy(suggestions = emptyList()) }
+        }
     }
+
+    //saat user klik suggestion
+    fun onSuggestionClick(suggestion: String) {
+        _uiState.update {
+            it.copy(
+                searchQuery = suggestion,
+                suggestions = emptyList()
+            )
+        }
+    }
+
+    //algoritma fuzzy
+    private fun hasTypoMatch(text: String, query: String): Boolean {
+        val words = text.split(" ")
+        for (word in words) {
+            //toleransi typo
+            if (calculateLevenshteinDistance(word, query) <= 2) return true
+        }
+        return false
+    }
+
+    private fun calculateLevenshteinDistance(s1: String, s2: String): Int {
+        val dp = Array(s1.length + 1) { IntArray(s2.length + 1) }
+        for (i in 0..s1.length) {
+            for (j in 0..s2.length) {
+                if (i == 0) dp[i][j] = j
+                else if (j == 0) dp[i][j] = i
+                else dp[i][j] = min(
+                    dp[i - 1][j - 1] + costOfSubstitution(s1[i - 1], s2[j - 1]),
+                    min(dp[i - 1][j] + 1, dp[i][j - 1] + 1)
+                )
+            }
+        }
+        return dp[s1.length][s2.length]
+    }
+
+    private fun costOfSubstitution(a: Char, b: Char): Int = if (a == b) 0 else 1
 
     fun setMainCategory(category: String) {
         _uiState.update { currentState ->
             val newSelection = if (currentState.selectedMainCategory == category) "" else category
-            val filteredList = applyLocalFilters(newSelection, currentState.selectedCategories)
+            val filteredList = applyLocalFilters(
+                newSelection,
+                currentState.selectedCategories
+            )
 
             currentState.copy(
                 selectedMainCategory = newSelection,
@@ -96,8 +157,10 @@ class SharingPromptViewModel @Inject constructor(
             } else {
                 currentList.add(category)
             }
-
-            val filteredList = applyLocalFilters(currentState.selectedMainCategory, currentList)
+            val filteredList = applyLocalFilters(
+                currentState.selectedMainCategory,
+                currentList
+            )
 
             currentState.copy(
                 selectedCategories = currentList,
