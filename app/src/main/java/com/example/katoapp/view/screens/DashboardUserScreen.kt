@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package com.example.katoapp.view.screens
 
 import androidx.compose.foundation.Image
@@ -52,7 +50,9 @@ import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.Carousel
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.MainCategoryButton
+import com.example.katoapp.view.component.MainCategorySkeleton
 import com.example.katoapp.view.component.PromptCard
+import com.example.katoapp.view.component.PromptCardSkeleton
 import com.example.katoapp.view.component.SearchBar
 import com.example.katoapp.viewModel.DashboardUserViewModel
 import com.example.katoapp.viewModel.PromptOrgViewModel
@@ -66,6 +66,7 @@ fun DashboardUserRoute(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val promptUiState by promptOrgViewModel.uiState.collectAsState()
+    val isLoading = uiState.isLoading || promptUiState.isLoading
     val username = if (uiState.isLoading) "Loading.."
                     else uiState.username
 
@@ -74,6 +75,7 @@ fun DashboardUserRoute(
         topRatedPrompts = uiState.topRatedPrompts,
         categories = promptUiState.categories,
         popularPrompts = uiState.popularPrompts,
+        isLoading = isLoading,
         onSearchClicked = {
             dashboardNavController.navigate("sharing") {
                 popUpTo(dashboardNavController.graph.findStartDestination().id){
@@ -102,7 +104,7 @@ fun DashboardUserRoute(
     )
 }
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardUserScreen(
     modifier: Modifier = Modifier ,
@@ -110,6 +112,7 @@ fun DashboardUserScreen(
     categories: List<String> ,
     popularPrompts: List<Prompt> ,
     topRatedPrompts: List<Prompt> ,
+    isLoading: Boolean,
     onSearchClicked: (String) -> Unit ,
     onAddPromptClick: () -> Unit ,
     onCategoryClick: (String) -> Unit,
@@ -242,14 +245,14 @@ fun DashboardUserScreen(
             //Main Category
             Column(
                 modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 26.dp),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "Kategori Utama",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(horizontal = 26.dp)
                 )
                 Row(
                     modifier = Modifier
@@ -257,18 +260,26 @@ fun DashboardUserScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    categories.forEach { dbValue ->
-                        MainCategoryButton(
-                            text = CategoryMapper.getDisplayName(dbValue),
-                            icon = CategoryMapper.getIcon(dbValue),
-                            isSelected = (selectedCategory == dbValue),
-                            onClick = {
-                                selectedCategory = dbValue
-                                onCategoryClick(dbValue)
-                            }
-                        )
+                    Spacer(modifier.width(18.dp))
+                    if (isLoading) {
+                        repeat(4) {
+                            MainCategorySkeleton()
+                        }
+                    } else {
+                        categories.forEach { dbValue ->
+                            MainCategoryButton(
+                                text = CategoryMapper.getDisplayName(dbValue),
+                                icon = CategoryMapper.getIcon(dbValue),
+                                isSelected = (selectedCategory == dbValue),
+                                onClick = {
+                                    selectedCategory = dbValue
+                                    onCategoryClick(dbValue)
+                                }
+                            )
 
+                        }
                     }
+                    Spacer(modifier.width(18.dp))
                 }
             }
 
@@ -278,11 +289,11 @@ fun DashboardUserScreen(
             Column(
                 modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 26.dp)
             ) {
                 Row(
                     modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(horizontal = 26.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Absolute.SpaceBetween
                 ) {
@@ -306,23 +317,22 @@ fun DashboardUserScreen(
                 }
 
                 Spacer(modifier.height(8.dp))
-                if (popularPrompts.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp),
-                        contentAlignment = Alignment.Center
+                if (isLoading){
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 26.dp)
                     ) {
-                        Text(
-                            text = "Belum ada data populer.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+                        items(3)  {
+                            PromptCardSkeleton()
+                        }
                     }
                 } else {
                     LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        contentPadding = PaddingValues(horizontal = 26.dp)
                     ) {
                         items(popularPrompts) { prompt ->
                             val displayCategory = CategoryMapper.getDisplayName(prompt.category)
@@ -348,11 +358,11 @@ fun DashboardUserScreen(
             Column(
                 modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 26.dp)
             ) {
                 Row(
                     modifier
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .padding(horizontal = 26.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Absolute.SpaceBetween
                 ) {
@@ -376,23 +386,22 @@ fun DashboardUserScreen(
                 }
 
                 Spacer(modifier.height(8.dp))
-                if (topRatedPrompts.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(100.dp),
-                        contentAlignment = Alignment.Center
+
+                if(isLoading) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "Belum ada data top Rated Prompt",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.Gray
-                        )
+                        items(3)  {
+                            PromptCardSkeleton()
+                        }
                     }
                 } else {
                     LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        contentPadding = PaddingValues(horizontal = 26.dp)
                     ) {
                         items(topRatedPrompts) { prompt ->
                             val displayCategory = CategoryMapper.getDisplayName(prompt.category)
@@ -411,6 +420,8 @@ fun DashboardUserScreen(
                 }
 
             }
+
+            Spacer(modifier.height(16.dp))
 
         }
 
@@ -434,7 +445,8 @@ private fun View() {
         onPromptClick = {},
         onCategoryClick = {},
         onPopularClick = {},
-        onTopRatedClick = {}
+        onTopRatedClick = {},
+        isLoading = false
     )
 
 }

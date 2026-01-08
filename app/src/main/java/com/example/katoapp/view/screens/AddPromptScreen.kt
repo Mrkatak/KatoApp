@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,22 +24,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage // Pastikan dependency Coil sudah ada, jika belum pakai Image biasa dulu
+import coil.compose.AsyncImage
 import com.example.katoapp.R
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.GeneralCategory
 import com.example.katoapp.view.component.MainCategoryButton
-import com.example.katoapp.viewModel.AuthViewModel
 import com.example.katoapp.viewModel.PromptOrgViewModel
 
 @Composable
@@ -159,8 +153,7 @@ fun AddPromptScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp, top = 8.dp)
-                .padding(horizontal = 26.dp),
+                .padding(bottom = 32.dp, top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             //Input Judul
@@ -175,7 +168,9 @@ fun AddPromptScreen(
                             color = MaterialTheme.colorScheme.secondary
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 26.dp),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
@@ -198,6 +193,7 @@ fun AddPromptScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 26.dp)
                         .height(112.dp),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(
@@ -210,7 +206,10 @@ fun AddPromptScreen(
             //Main Category
             InputSection(title = "Kategori Utama") {
                 if (isLoading) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(
+                        modifier
+                            .padding(horizontal = 26.dp)
+                    )
                 } else {
                     Row(
                         modifier = Modifier
@@ -218,6 +217,7 @@ fun AddPromptScreen(
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Spacer(modifier.width(18.dp))
                         categories.forEach { dbValue ->
                             MainCategoryButton(
                                 text = CategoryMapper.getDisplayName(dbValue),
@@ -227,13 +227,15 @@ fun AddPromptScreen(
                             )
 
                         }
+                        Spacer(modifier.width(18.dp))
                     }
                 }
             }
 
             //Model & versi AI
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(26.dp)
             ) {
                 Column(
@@ -251,7 +253,9 @@ fun AddPromptScreen(
                                     color = MaterialTheme.colorScheme.secondary,
                                     overflow = TextOverflow.Ellipsis
                                 ) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 26.dp),
                             shape = RoundedCornerShape(12.dp),
                             singleLine = true,
                             maxLines = 1,
@@ -264,28 +268,34 @@ fun AddPromptScreen(
 
                 Column(
                     modifier
-                        .weight(1f)
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InputSection("Versi Model AI") {
-                        OutlinedTextField(
-                            value = modelVersion,
-                            onValueChange = { modelVersion = it },
-                            placeholder = {
-                                Text(
-                                    text = "2.5....",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            maxLines = 1,
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Sentences
+                    Text(
+                        text = "Versi Model AI" ,
+                        style = MaterialTheme.typography.labelMedium ,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    OutlinedTextField(
+                        value = modelVersion,
+                        onValueChange = { modelVersion = it },
+                        placeholder = {
+                            Text(
+                                text = "2.5....",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.secondary
                             )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(end = 26.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        maxLines = 1,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
                         )
-                    }
+                    )
                 }
             }
 
@@ -296,7 +306,9 @@ fun AddPromptScreen(
                         value = "Memuat data...",
                         onValueChange = {},
                         enabled = false,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 26.dp),
                         shape = RoundedCornerShape(12.dp)
                     )
                 } else {
@@ -305,7 +317,9 @@ fun AddPromptScreen(
                         options = generalCategories,
                         selectedOptions = selectedGeneralCategories,
                         onSelectionChanged = onGeneralCategoryToggle,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 26.dp)
                     )
                 }
             }
@@ -317,6 +331,7 @@ fun AddPromptScreen(
                         .fillMaxWidth()
                         .height(200.dp)
                         .clip(RoundedCornerShape(12.dp))
+                        .padding(horizontal = 26.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
                         .clickable { onImageClick() },
@@ -351,7 +366,9 @@ fun AddPromptScreen(
             //Status Prompt
             InputSection(title = "Status Prompt") {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 26.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Switch(
@@ -371,6 +388,7 @@ fun AddPromptScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 26.dp)
             ) {
                 //Button Simpan
                 Button(
@@ -444,7 +462,8 @@ fun InputSection(
         Text(
             text = title,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(horizontal = 26.dp)
         )
         Spacer(modifier = Modifier.height(8.dp))
         content()
@@ -454,17 +473,15 @@ fun InputSection(
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun AddPromptScreenPreview() {
-    MaterialTheme {
-        AddPromptScreen(
-            onBackClick = {},
-            onSaveClick = { _, _, _, _, _, _, _ -> },
-            onImageClick = {},
-            onGeneralCategoryToggle = {},
-            categories = listOf("Text to Text", "Text to Image", "Text to Video"),
-            generalCategories = listOf("Makanan", "Teknologi", "Pendidikan", "Hiburan"),
-            selectedGeneralCategories = listOf("Teknologi"),
-            isLoading = false,
-            selectedImageUri = null
-        )
-    }
+    AddPromptScreen(
+        onBackClick = {},
+        onSaveClick = { _, _, _, _, _, _, _ -> },
+        onImageClick = {},
+        onGeneralCategoryToggle = {},
+        categories = listOf("Text to Text", "Text to Image", "Text to Video"),
+        generalCategories = listOf("Makanan", "Teknologi", "Pendidikan", "Hiburan"),
+        selectedGeneralCategories = listOf("Teknologi"),
+        isLoading = false,
+        selectedImageUri = null
+    )
 }

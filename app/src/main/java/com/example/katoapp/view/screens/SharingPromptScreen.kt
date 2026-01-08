@@ -34,6 +34,8 @@ import com.example.katoapp.view.component.PromptCard
 import com.example.katoapp.view.component.SearchBar
 import com.example.katoapp.viewModel.SharingPromptViewModel
 import com.example.katoapp.R
+import com.example.katoapp.view.component.MainCategorySkeleton
+import com.example.katoapp.view.component.PromptCardSkeleton
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -178,19 +180,18 @@ fun SharingPromptScreen(
         Column(
             modifier
                 .fillMaxSize()
-//                .verticalScroll(rememberScrollState())
         ) {
             //main category button
             Column(
                 modifier
-                    .fillMaxWidth()
-                    .padding(start = 26.dp),
+                    .fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
                     text = "Kategori Utama",
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(start = 26.dp)
                 )
 
                 Row(
@@ -199,15 +200,23 @@ fun SharingPromptScreen(
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    categories.forEach { dbValue ->
-                        MainCategoryButton(
-                            text = CategoryMapper.getDisplayName(dbValue),
-                            icon = CategoryMapper.getIcon(dbValue),
-                            isSelected = (selectedMainCategory == dbValue),
-                            onClick = { onMainCategoryClick(dbValue)}
-                        )
+                    Spacer(modifier.width(18.dp))
+                    if(isLoading){
+                        repeat(4){
+                            MainCategorySkeleton()
+                        }
+                    } else {
+                        categories.forEach { dbValue ->
+                            MainCategoryButton(
+                                text = CategoryMapper.getDisplayName(dbValue),
+                                icon = CategoryMapper.getIcon(dbValue),
+                                isSelected = (selectedMainCategory == dbValue),
+                                onClick = { onMainCategoryClick(dbValue)}
+                            )
 
+                        }
                     }
+                    Spacer(modifier.width(18.dp))
                 }
             }
             Spacer(modifier.height(16.dp))
@@ -226,8 +235,14 @@ fun SharingPromptScreen(
                 )
 
                 if (isLoading && generalCategories.isEmpty()) {
-                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp))
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        repeat(6){
+                            MainCategorySkeleton()
+                        }
                     }
                 } else {
                     FlowRow(
@@ -251,20 +266,16 @@ fun SharingPromptScreen(
 
             //list prompt terbaru
             if (isLoading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 16.dp, top = 16.dp),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    CircularProgressIndicator()
-                }
-            } else if (promptList.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Belum ada prompt.", color = Color.Gray)
+                    items(4) {
+                        PromptCardSkeleton()
+                    }
                 }
             } else {
                 LazyVerticalGrid(

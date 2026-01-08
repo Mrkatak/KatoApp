@@ -282,8 +282,8 @@ fun PromptDetailsReportScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
+                .verticalScroll(rememberScrollState()),
+//                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -292,30 +292,74 @@ fun PromptDetailsReportScreen(
                 text = data.title,
                 style = MaterialTheme.typography.titleLarge,
                 textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.onBackground
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 24.dp)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             //gambar prompt
-            AsyncImage(
-                model = data.imageUrl,
-                contentDescription = data.title,
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.ic_image),
-                error = painterResource(R.drawable.ic_image),
-                modifier = Modifier
-                    .fillMaxWidth()
+            Box(
+                modifier
                     .height(250.dp)
-                    .clip(RoundedCornerShape(18.dp))
-                    .clickable { showImagePreview = true}
-            )
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .clip(RoundedCornerShape(18.dp)),
+                contentAlignment = Alignment.BottomStart
+            ){
+                AsyncImage(
+                    model = data.imageUrl,
+                    contentDescription = data.title,
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.ic_image),
+                    error = painterResource(R.drawable.ic_image),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable { showImagePreview = true}
+                )
+
+                if (!isOwner && data.username.isNotEmpty()) {
+                    Column(
+                        modifier
+                            .wrapContentSize()
+                            .clip(RoundedCornerShape(topEnd = 18.dp))
+                            .background(color = Color(0xFF1D1B20).copy(alpha = 0.7f))
+                            .padding(horizontal = 16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Dibuat oleh: ${data.username}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+
+            }
+//            AsyncImage(
+//                model = data.imageUrl,
+//                contentDescription = data.title,
+//                contentScale = ContentScale.Crop,
+//                placeholder = painterResource(R.drawable.ic_image),
+//                error = painterResource(R.drawable.ic_image),
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(250.dp)
+//                    .clip(RoundedCornerShape(18.dp))
+//                    .clickable { showImagePreview = true}
+//            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             //stats
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 //kategori
@@ -402,18 +446,7 @@ fun PromptDetailsReportScreen(
                     }
                 }
             }
-
             Spacer(modifier = Modifier.height(24.dp))
-
-            if (!isOwner && data.username.isNotEmpty()) {
-                Text(
-                    text = "Dibuat oleh: ${data.username}",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.align(Alignment.Start)
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-            }
 
             //kategori umum
             if (data.subCategories.isNotEmpty()) {
@@ -422,11 +455,13 @@ fun PromptDetailsReportScreen(
                 ) {
                     Text(
                         text = "Kategori Umum",
-                        style = MaterialTheme.typography.labelMedium
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.padding(horizontal = 24.dp)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 24.dp)
                     ) {
                         items(data.subCategories) { tag ->
                             GeneralCategoryButton(
@@ -441,7 +476,11 @@ fun PromptDetailsReportScreen(
             }
 
             //prompt
-            Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+            ) {
                 Text(
                     text = "Prompt",
                     style = MaterialTheme.typography.labelMedium,
@@ -486,7 +525,8 @@ fun PromptDetailsReportScreen(
             //metadata
             Column(
                 modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -570,7 +610,8 @@ fun PromptDetailsReportScreen(
             Spacer(modifier = Modifier.height(40.dp))
             Column(
                 modifier
-                    .fillMaxWidth(),
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {

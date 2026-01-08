@@ -1,5 +1,6 @@
 package com.example.katoapp.view.screens
 
+import android.widget.Space
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,7 +50,9 @@ import com.example.katoapp.R
 import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.MainCategoryButton
+import com.example.katoapp.view.component.MainCategorySkeleton
 import com.example.katoapp.view.component.PromptCard
+import com.example.katoapp.view.component.PromptCardSkeleton
 import com.example.katoapp.viewModel.AdminViewModel
 import com.example.katoapp.viewModel.AuthViewModel
 import com.example.katoapp.viewModel.state.AdminTab
@@ -191,7 +194,7 @@ fun DashboardAdminScreen(
             //tombol laporan dan peninjau
             Row(
                 modifier
-                    .padding(horizontal = 26.dp, vertical = 4.dp),
+                    .padding(horizontal = 26.dp , vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
@@ -204,6 +207,7 @@ fun DashboardAdminScreen(
                     modifier = Modifier.weight(1f)
                 )
 
+                Spacer(modifier.width(8.dp))
                 // tombol meninjau
                 AdminTabButton(
                     text = "Meninjau Prompt",
@@ -234,21 +238,29 @@ fun DashboardAdminScreen(
                 Row(
                     modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 26.dp)
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    categories.forEach { dbValue ->
-                        MainCategoryButton(
-                            text = CategoryMapper.getDisplayName(dbValue),
-                            icon = CategoryMapper.getIcon(dbValue),
-                            isSelected = (selectedMainCategory == dbValue),
-                            onClick = {
-                                onCategoryClick(dbValue)
-                            }
-                        )
+                    Spacer(modifier.width(18.dp))
+                    if(isLoading) {
+                        repeat(4){
+                            MainCategorySkeleton()
+                        }
+                    } else {
+                        categories.forEach { dbValue ->
+                            MainCategoryButton(
+                                text = CategoryMapper.getDisplayName(dbValue),
+                                icon = CategoryMapper.getIcon(dbValue),
+                                isSelected = (selectedMainCategory == dbValue),
+                                onClick = {
+                                    onCategoryClick(dbValue)
+                                }
+                            )
+                        }
                     }
+
+                    Spacer(modifier.width(18.dp))
                 }
             }
 
@@ -256,8 +268,15 @@ fun DashboardAdminScreen(
 
             //prompt display
             if (isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 16.dp)
+                ) {
+                    items(6){
+                        PromptCardSkeleton()
+                    }
                 }
             } else if (prompts.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -269,9 +288,9 @@ fun DashboardAdminScreen(
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 100.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(start = 26.dp, end = 26.dp, bottom = 16.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     items(prompts) { prompt ->

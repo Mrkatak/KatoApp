@@ -5,7 +5,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,27 +20,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage // Pastikan dependency Coil sudah ada, jika belum pakai Image biasa dulu
+import coil.compose.AsyncImage
 import com.example.katoapp.R
 import com.example.katoapp.data.model.Prompt
 import com.example.katoapp.view.component.CategoryMapper
 import com.example.katoapp.view.component.GeneralCategory
 import com.example.katoapp.view.component.MainCategoryButton
-import com.example.katoapp.viewModel.AuthViewModel
 import com.example.katoapp.viewModel.PromptOrgViewModel
 
 @Composable
@@ -184,8 +177,7 @@ fun PromptEditScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp, top = 8.dp)
-                .padding(horizontal = 26.dp),
+                .padding(bottom = 32.dp, top = 8.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             //Input Judul
@@ -200,7 +192,9 @@ fun PromptEditScreen(
                             color = MaterialTheme.colorScheme.secondary
                         )
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 26.dp),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(
@@ -223,7 +217,8 @@ fun PromptEditScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(112.dp),
+                        .height(112.dp)
+                        .padding(horizontal = 26.dp),
                     shape = RoundedCornerShape(12.dp),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences
@@ -243,6 +238,7 @@ fun PromptEditScreen(
                             .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
+                        Spacer(modifier.width(18.dp))
                         categories.forEach { dbValue ->
                             MainCategoryButton(
                                 text = CategoryMapper.getDisplayName(dbValue),
@@ -251,6 +247,7 @@ fun PromptEditScreen(
                                 onClick = { selectedCategory = dbValue}
                             )
                         }
+                        Spacer(modifier.width(18.dp))
                     }
                 }
             }
@@ -275,7 +272,9 @@ fun PromptEditScreen(
                                     color = MaterialTheme.colorScheme.secondary,
                                     overflow = TextOverflow.Ellipsis
                                 ) },
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 26.dp),
                             shape = RoundedCornerShape(12.dp),
                             singleLine = true,
                             maxLines = 1,
@@ -288,28 +287,34 @@ fun PromptEditScreen(
 
                 Column(
                     modifier
-                        .weight(1f)
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    InputSection("Versi Model AI") {
-                        OutlinedTextField(
-                            value = modelVersion,
-                            onValueChange = { modelVersion = it },
-                            placeholder = {
-                                Text(
-                                    text = "2.5....",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            singleLine = true,
-                            maxLines = 1,
-                            keyboardOptions = KeyboardOptions(
-                                capitalization = KeyboardCapitalization.Sentences
+                    Text(
+                        text = "Versi Model AI" ,
+                        style = MaterialTheme.typography.labelMedium ,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                    OutlinedTextField(
+                        value = modelVersion,
+                        onValueChange = { modelVersion = it },
+                        placeholder = {
+                            Text(
+                                text = "2.5....",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.secondary
                             )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 26.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true,
+                        maxLines = 1,
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Sentences
                         )
-                    }
+                    )
                 }
             }
 
@@ -320,7 +325,9 @@ fun PromptEditScreen(
                         value = "Memuat data...",
                         onValueChange = {},
                         enabled = false,
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 26.dp),
                         shape = RoundedCornerShape(12.dp)
                     )
                 } else {
@@ -333,7 +340,9 @@ fun PromptEditScreen(
                             if (list.contains(cat)) list.remove(cat) else list.add(cat)
                             selectedGeneralCategories = list
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 26.dp)
                     )
                 }
             }
@@ -344,6 +353,7 @@ fun PromptEditScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
+                        .padding(horizontal = 26.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
@@ -386,7 +396,9 @@ fun PromptEditScreen(
             //Status Prompt
             InputSection(title = "Status Prompt") {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 26.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Switch(
@@ -406,6 +418,7 @@ fun PromptEditScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(horizontal = 26.dp)
             ) {
                 Row(
                     modifier
