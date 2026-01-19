@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.Date
 import javax.inject.Inject
 import kotlin.math.min
 
@@ -556,34 +557,97 @@ class PromptRepository @Inject constructor(
     //function update prompt usage count
     suspend fun incrementUsageCount(prompt: Prompt) {
         withContext(Dispatchers.IO) {
+            val currentUser = auth.currentUser ?: return@withContext
             val batch = firestore.batch()
 
-            // Update Admin
+            //update admin
             if (prompt.status == "sharing") {
                 val adminRef = firestore.collection("admin")
-                    .document(adminDocId)
-                    .collection("SharingPrompt")
-                    .document(prompt.id)
-                // Atomic Increment
-                batch.update(
-                    adminRef,
-                    "UsageCount",
-                    FieldValue.increment(1)
-                )
+                    .document(adminDocId).collection("SharingPrompt").document(prompt.id)
+                batch.update(adminRef, "UsageCount", FieldValue.increment(1))
             }
 
-            // Update User
+            // update pengguna
             val userRef = firestore.collection("pengguna")
-                .document(prompt.userId)
-                .collection("PrivatePrompt")
-                .document(prompt.id)
+                .document(prompt.userId).collection("PrivatePrompt").document(prompt.id)
+             batch.update(userRef, "UsageCount", FieldValue.increment(1))
 
-            batch.update(
-                userRef,
-                "UsageCount",
-                FieldValue.increment(1)
+            //save log
+            val logRef = firestore.collection("pengguna")
+                .document(currentUser.uid)
+                .collection("HistoryPrompt")
+                .document("UsageLogs")
+                .collection("Logs")
+                .document()
+
+            val logData = hashMapOf(
+                "Category" to prompt.category,
+                "Tanggal" to FieldValue.serverTimestamp()
             )
+            batch.set(logRef, logData)
             batch.commit().await()
+        }
+    }
+
+    //function get prompt log
+    suspend fun getPromptLog(minDate: Date? = null): Map<String, Int> {
+        return try {
+            val uid = auth.currentUser?.uid ?: return emptyMap()
+
+            var query: Query = firestore.collection("pengguna")
+                .document(uid)
+                .collection("HistoryPrompt")
+                .document("UsageLogs")
+                .collection("Logs")
+
+            // filter by tanggal
+            if (minDate != null) {
+                query = query.whereGreaterThanOrEqualTo("Tanggal", minDate)
+            }
+
+            val snapshot = query.get().await()
+
+            // Grouping
+            val stats = mutableMapOf<String, Int>()
+            snapshot.documents.forEach { doc ->
+                val category = doc.getString("Category") ?: "Lainnya"
+                val currentCount = stats[category] ?: 0
+                stats[category] = currentCount + 1
+            }
+            stats
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyMap()
+        }
+    }
+
+    //function get created prompt
+    suspend fun getCreatedStats(minDate: Date? = null): Map<String, Int> {
+        return try {
+            val uid = auth.currentUser?.uid ?: return emptyMap()
+
+            var query: Query = firestore.collection("pengguna")
+                .document(uid)
+                .collection("PrivatePrompt")
+
+            //filter tanggal
+            if (minDate != null) {
+                query = query.whereGreaterThanOrEqualTo("Tanggal", minDate)
+            }
+
+            val snapshot = query.get().await()
+            val stats = mutableMapOf<String, Int>()
+            snapshot.documents.forEach { doc ->
+                val category = doc.getString("KategoriUtama")
+                    ?: doc.getString("MainKategori")
+                    ?: "Lainnya"
+                val currentCount = stats[category] ?: 0
+                stats[category] = currentCount + 1
+            }
+            stats
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyMap()
         }
     }
 
@@ -636,7 +700,7 @@ class PromptRepository @Inject constructor(
                 .document(promptId)
 
             if (isSharing) {
-                //jika sharing tambahkan prompt ke admin
+                //if sharing tambahkan prompt ke admin
                 val fullData = updateData.toMutableMap()
                 fullData["UserId"] = currentUser.uid
                 fullData["Username"] = currentUser.displayName ?: "User"
@@ -690,31 +754,22 @@ class PromptRepository @Inject constructor(
         return withContext(Dispatchers.IO) {
             try {
                 val currentUser = auth.currentUser ?: return@withContext false
-
-                // UPDATE: Gunakan nama field yang SAMA dengan Prompt biasa
-                // agar bisa dibaca oleh mapDocumentToPrompt nanti
                 val reportData = hashMapOf(
-                    // Info Prompt Asli
-                    "id" to prompt.id, // Simpan ID Asli di dalam field
+                    "id" to prompt.id,
                     "Judul" to prompt.title,
                     "Prompt" to prompt.content,
-                    "LinkGambar" to prompt.imageUrl, // Samakan nama field gambar
+                    "LinkGambar" to prompt.imageUrl,
                     "KategoriUtama" to prompt.category,
                     "Rating" to prompt.rating,
-
-                    // Info Pemilik Prompt
-                    "UserId" to prompt.userId, // ID Pemilik
-
-                    // Info Pelapor
+                    "UserId" to prompt.userId,
                     "ReporterId" to currentUser.uid,
                     "ReporterName" to (currentUser.displayName ?: "User"),
                     "Reason" to reason,
-
                     "StatusLaporan" to "Pending",
-                    "TanggalLaporan" to FieldValue.serverTimestamp() // Untuk sorting laporan
+                    "TanggalLaporan" to FieldValue.serverTimestamp() //sorting laporan
                 )
 
-                // Simpan ke Admin -> ReportedPrompt
+                //simpan ke Admin
                 firestore.collection("admin")
                     .document(adminDocId)
                     .collection("ReportedPrompt")

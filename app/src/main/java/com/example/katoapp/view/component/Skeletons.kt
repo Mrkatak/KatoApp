@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -25,6 +26,7 @@ fun MainCategorySkeleton() {
             .padding(vertical = 2.dp)
             .height(44.dp)
             .width(100.dp)
+            .shadow(elevation = 4.dp , shape = CircleShape)
             .clip(CircleShape)
             .shimmerEffect()
     )
@@ -36,7 +38,32 @@ fun PromptCardSkeleton() {
         modifier = Modifier
             .width(174.dp)
             .height(226.dp)
+            .shadow(elevation = 4.dp , shape = RoundedCornerShape(18.dp))
             .clip(RoundedCornerShape(18.dp))
+            .shimmerEffect()
+    )
+}
+
+@Composable
+fun DonutChartSkeleton() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(380.dp)
+            .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .shimmerEffect()
+    )
+}
+
+@Composable
+fun BarChartSkeleton() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp)
+            .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
             .shimmerEffect()
     )
 }

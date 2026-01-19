@@ -27,9 +27,6 @@ class MainActivity : ComponentActivity() {
 
         super.onCreate(savedInstanceState)
 
-//        checkAppSignature()
-
-
         enableEdgeToEdge()
         viewModel.checkUserSession()
         splashScreen.setKeepOnScreenCondition {
@@ -49,34 +46,4 @@ class MainActivity : ComponentActivity() {
 
     }
 
-//    private fun checkAppSignature() {
-//        try {
-//            //get signature
-//            @Suppress("DEPRECATION")
-//            val info = packageManager.getPackageInfo(
-//                packageName,
-//                PackageManager.GET_SIGNATURES
-//            )
-//
-//            //loop
-//            val signatures = info.signatures
-//            if (signatures != null) {
-//                for (signature in signatures) {
-//                    val md = MessageDigest.getInstance("SHA-1")
-//                    md.update(signature.toByteArray())
-//                    val digest = md.digest()
-//                    val hexString = StringBuilder()
-//
-//                    //byte to hex
-//                    for (b in digest) {
-//                        hexString.append(String.format("%02X:", b))
-//                    }
-//                    //logcat
-//                    Log.d("CEK_SHA1", "SHA-1 ASLI: ${hexString.toString().dropLast(1)}")
-//                }
-//            }
-//        } catch (e: Exception) {
-//            Log.e("CEK_SHA1", "Error mengambil signature", e)
-//        }
-//    }
 }

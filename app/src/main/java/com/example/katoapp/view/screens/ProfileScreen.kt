@@ -65,6 +65,9 @@ fun ProfileRoute(
         sharedCount = uiState.sharedCount,
         savedCount = uiState.savedCount,
         likedCount = 0,
+        onUsageReportClick = {
+            navController.navigate("PromptHistoryScreen")
+        },
         onHelpClick = {
             //navigasi ke halaman bantuan
         },
@@ -86,6 +89,7 @@ fun ProfileScreen(
     sharedCount: Int,
     savedCount: Int,
     likedCount: Int = 0,
+    onUsageReportClick: () ->Unit,
     onHelpClick: () -> Unit,
     onLogoutClick: () -> Unit
 ) {
@@ -205,10 +209,10 @@ fun ProfileScreen(
                 color = MaterialTheme.colorScheme.outline
             )
 
-            //button help
+            //button usage report
             Button(
                 onClick = {
-                    onHelpClick
+                    onUsageReportClick()
                 },
                 shape = RoundedCornerShape(100.dp),
                 colors = ButtonDefaults.buttonColors(
@@ -229,19 +233,57 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.ic_help),
+                        painter = painterResource(R.drawable.ic_bar_chart),
                         contentDescription = null,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier.width(8.dp))
 
                     Text(
-                        text = "Bantuan Pengguna",
+                        text = "Laporan Penggunaan",
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
             }
             Spacer(modifier.height(8.dp))
+
+            //button help
+//            Button(
+//                onClick = {
+//                    onHelpClick()
+//                },
+//                shape = RoundedCornerShape(100.dp),
+//                colors = ButtonDefaults.buttonColors(
+//                    containerColor = MaterialTheme.colorScheme.onPrimary,
+//                    contentColor = MaterialTheme.colorScheme.secondary
+//                ),
+//                elevation = ButtonDefaults.elevatedButtonElevation(2.dp),
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .padding(vertical = 2.dp)
+//                    .height(44.dp)
+//
+//            ) {
+//                Row(
+//                    modifier
+//                        .fillMaxWidth() ,
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.Start
+//                ) {
+//                    Icon(
+//                        painter = painterResource(R.drawable.ic_help),
+//                        contentDescription = null,
+//                        modifier = Modifier.size(24.dp)
+//                    )
+//                    Spacer(modifier.width(8.dp))
+//
+//                    Text(
+//                        text = "Bantuan Pengguna",
+//                        style = MaterialTheme.typography.labelLarge
+//                    )
+//                }
+//            }
+//            Spacer(modifier.height(8.dp))
 
             //button logout
             Button(
@@ -325,6 +367,7 @@ fun ProfileItem(number: String, label: String) {
 @Composable
 private fun View() {
     ProfileScreen(
+        onUsageReportClick = {},
         onLogoutClick = {},
         onHelpClick = {},
         username = "Pengguna01",

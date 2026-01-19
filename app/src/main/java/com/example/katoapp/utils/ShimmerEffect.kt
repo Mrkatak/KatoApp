@@ -5,6 +5,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,9 +33,9 @@ fun Modifier.shimmerEffect(): Modifier = composed {
     background(
         brush = Brush.linearGradient(
             colors = listOf(
-                Color(0xFFFFFFFF),
+                MaterialTheme.colorScheme.onPrimary,
                 Color(0xFFA4A1A1),
-                Color(0xFFFFFFFF),
+                MaterialTheme.colorScheme.onPrimary,
 
 //                Color(0xFFB8B5B5),
 //                Color(0xFF8F8B8B),

@@ -32,6 +32,8 @@ import com.example.katoapp.view.screens.ProfileScreen
 import com.example.katoapp.view.screens.PromptDetailRoute
 import com.example.katoapp.view.screens.PromptDetailsReportRoute
 import com.example.katoapp.view.screens.PromptEditRoute
+import com.example.katoapp.view.screens.PromptHistoryRoute
+import com.example.katoapp.view.screens.PromptHistoryScreen
 import com.example.katoapp.view.screens.PromptSearchResultRoute
 import com.example.katoapp.view.screens.RegisterRoute
 import com.example.katoapp.view.screens.ResetPassRoute
@@ -48,7 +50,7 @@ sealed class BottomNavItem(
     val unselectedIcon: Int
 ) {
     object Dashboard : BottomNavItem("dashboard", "Dashboard", R.drawable.ic_home, R.drawable.ic_home)
-    object Sharing : BottomNavItem("sharing", "Sharing", R.drawable.ic_sharing, R.drawable.ic_sharing)
+    object Sharing : BottomNavItem("sharing", "Berbagi", R.drawable.ic_sharing, R.drawable.ic_sharing)
     object Simpan : BottomNavItem("simpan", "Simpan", R.drawable.ic_save, R.drawable.ic_save)
     object Profil : BottomNavItem("profil", "Profil", R.drawable.ic_profile, R.drawable.ic_profile)
 }
@@ -151,6 +153,12 @@ fun Navigation(
             )
         ) {
             PromptDetailsReportRoute(
+                navController = rootNavController
+            )
+        }
+
+        composable("PromptHistoryScreen") {
+            PromptHistoryRoute(
                 navController = rootNavController
             )
         }
