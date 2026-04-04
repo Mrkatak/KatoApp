@@ -311,8 +311,8 @@ fun PromptDetailsReportScreen(
                     model = data.imageUrl,
                     contentDescription = data.title,
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.ic_image),
-                    error = painterResource(R.drawable.ic_image),
+                    placeholder = painterResource(R.drawable.ic_default_image),
+                    error = painterResource(R.drawable.ic_default_image),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
@@ -340,18 +340,6 @@ fun PromptDetailsReportScreen(
                 }
 
             }
-//            AsyncImage(
-//                model = data.imageUrl,
-//                contentDescription = data.title,
-//                contentScale = ContentScale.Crop,
-//                placeholder = painterResource(R.drawable.ic_image),
-//                error = painterResource(R.drawable.ic_image),
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(250.dp)
-//                    .clip(RoundedCornerShape(18.dp))
-//                    .clickable { showImagePreview = true}
-//            )
 
             Spacer(modifier = Modifier.height(24.dp))
 

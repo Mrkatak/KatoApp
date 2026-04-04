@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -101,6 +102,33 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("")}
 
+    val isUsernameCharInvalid = username.any { !it.isLetterOrDigit() && !it.isWhitespace() }
+    val usernameError = when {
+        username.length > 50 -> "Nama maksimum 50 karakter"
+        username.isNotEmpty() && isUsernameCharInvalid -> "Format nama salah"
+        else -> null
+    }
+
+    val emailRegex = "^[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.com$".toRegex()
+    val emailError = when {
+        email.length > 50 -> "Email maksimum 50 karakter"
+        email.isNotEmpty() && !email.matches(emailRegex) -> "Format email salah"
+        else -> null
+    }
+
+    val hasDigit = password.any { it.isDigit() }
+    val hasUpperCase = password.any { it.isUpperCase() }
+    val hasSymbol = password.any { !it.isLetterOrDigit() }
+    val passwordError = when {
+        password.length > 30 -> "Password maksimum 30 karakter"
+        password.isNotEmpty() && password.length <= 6 -> "Password harus lebih dari 6 karakter"
+        password.isNotEmpty() && (!hasDigit || !hasUpperCase || !hasSymbol) -> "Password harus mengandung 1 angka, 1 huruf kapital, 1 simbol"
+        else -> null
+    }
+
+    val isFormValid = usernameError == null && emailError == null && passwordError == null &&
+            username.isNotBlank() && email.isNotBlank() && password.isNotBlank()
+
 
     Box(
         modifier
@@ -141,7 +169,7 @@ fun RegisterScreen(
             Spacer(modifier.height(48.dp))
             OutlinedTextField(
                 value = username,
-                onValueChange = {username = it},
+                onValueChange = { username = it},
                 shape = RoundedCornerShape(4.dp),
                 placeholder = {
                     Text(
@@ -176,13 +204,23 @@ fun RegisterScreen(
                 keyboardOptions = KeyboardOptions(
                     imeAction = ImeAction.Next
                 ),
-                maxLines = 1
+                maxLines = 1,
+                isError = usernameError != null,
+                supportingText = {
+                    if (usernameError != null) {
+                        Text(
+                            text = usernameError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
-            Spacer(modifier.height(16.dp))
+//            Spacer(modifier.height(6.dp))
             OutlinedTextField(
                 value = email,
-                onValueChange = {email = it},
+                onValueChange = { email = it},
                 shape = RoundedCornerShape(4.dp),
                 placeholder = {
                     Text(
@@ -215,12 +253,23 @@ fun RegisterScreen(
                     cursorColor = MaterialTheme.colorScheme.primary
                 ),
                 keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
                     imeAction = ImeAction.Next
                 ),
-                maxLines = 1
+                maxLines = 1,
+                isError = emailError != null,
+                supportingText = {
+                    if (emailError != null) {
+                        Text(
+                            text = emailError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
-            Spacer(modifier.height(16.dp))
+//            Spacer(modifier.height(6.dp))
             OutlinedTextField(
                 value = password,
                 onValueChange = {password  =it},
@@ -255,19 +304,33 @@ fun RegisterScreen(
                     cursorColor = MaterialTheme.colorScheme.primary
                 ),
                 keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done
                 ),
-                maxLines = 1
+                maxLines = 1,
+                isError = passwordError != null,
+                supportingText = {
+                    if (passwordError != null) {
+                        Text(
+                            text = passwordError,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
             )
 
-            Spacer(modifier.height(24.dp))
+            Spacer(modifier.height(14.dp))
             if (uiState.isLoading) {
                 CircularProgressIndicator()
             } else {
                 Button(
                     onClick = {
-                        onRegisterClick(username, email, password)
+                        if (isFormValid) {
+                            onRegisterClick(username, email, password)
+                        }
                     },
+                    enabled = isFormValid,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(40.dp),

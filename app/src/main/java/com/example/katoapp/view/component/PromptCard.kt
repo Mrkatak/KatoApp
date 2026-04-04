@@ -64,7 +64,7 @@ fun PromptCard(
                 model = imageUrl,
                 contentDescription = title,
                 contentScale = ContentScale.Crop,
-                error = painterResource(R.drawable.ic_image),
+                error = painterResource(R.drawable.ic_default_image),
                 modifier = Modifier.fillMaxSize()
             )
 

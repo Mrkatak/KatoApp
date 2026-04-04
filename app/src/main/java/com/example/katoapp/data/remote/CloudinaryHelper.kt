@@ -17,16 +17,17 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.example.katoapp.BuildConfig
 
 @Singleton
 class CloudinaryHelper @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
-    private val myCloudName = "der6c348w"
-    private val myUploadPreset = "kato_preset"
-    private val myApiKey = "135933964164896"
-    private val myApiSecret = "a8Trzvx7UUVCIqsLKyCEjsyv488"
+    private val myCloudName = BuildConfig.CLOUD_NAME
+    private val myUploadPreset = BuildConfig.UPLOAD_PRESET
+    private val myApiKey = BuildConfig.API_KEY
+    private val myApiSecret = BuildConfig.API_SECRET
 
     private fun initMediaManager() {
         try {

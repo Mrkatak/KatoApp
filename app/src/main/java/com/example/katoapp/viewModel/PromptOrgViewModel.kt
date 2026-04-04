@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.katoapp.data.repository.PromptRepository
 import com.example.katoapp.viewModel.state.PromptOrgUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import javax.inject.Inject
 
 
@@ -83,10 +85,12 @@ class PromptOrgViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             try {
-                repository.savePrompt(
-                    title, content, mainCategory, subCategories,
-                    aiModel, modelVersion, imageUri, isSharing
-                )
+                withTimeout(15000L){
+                    repository.savePrompt(
+                        title, content, mainCategory, subCategories,
+                        aiModel, modelVersion, imageUri, isSharing
+                    )
+                }
                 //if success
                 _uiState.update {
                     it.copy(
@@ -95,8 +99,14 @@ class PromptOrgViewModel @Inject constructor(
                         errorMessage = null
                     )
                 }
-            } catch (e: Exception) {
-                //if error
+            } catch (e: TimeoutCancellationException) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Terjadi kesalahan saat menyimpan"
+                    )
+                }
+            }catch (e: Exception) {
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -129,7 +139,7 @@ class PromptOrgViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Data tidak ditemukan"
+                        errorMessageLoad = "Data tidak ditemukan"
                     )
                 }
             }

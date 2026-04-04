@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,6 +10,12 @@ plugins {
     //plugin hilt
     id("kotlin-kapt")
     alias(libs.plugins.hilt.android)
+}
+
+val keystorePropertiesFile = rootProject.file("local.properties")
+val keystoreProperties = Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -21,6 +30,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "CLOUD_NAME", keystoreProperties["CLOUDINARY_CLOUD_NAME"].toString())
+        buildConfigField("String", "UPLOAD_PRESET", keystoreProperties["CLOUDINARY_UPLOAD_PRESET"].toString())
+        buildConfigField("String", "API_KEY", keystoreProperties["CLOUDINARY_API_KEY"].toString())
+        buildConfigField("String", "API_SECRET", keystoreProperties["CLOUDINARY_API_SECRET"].toString())
     }
 
     buildTypes {
@@ -41,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     kapt {
         correctErrorTypes = true

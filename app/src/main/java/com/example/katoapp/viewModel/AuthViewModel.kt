@@ -107,6 +107,36 @@ class AuthViewModel @Inject constructor(
             _uiState.update { it.copy(errorMessage = "Mohon isi semua kolom") }
             return
         }
+        val usernameRegex = "^[a-zA-Z0-9]+$".toRegex()
+        if (username.length > 50){
+            _uiState.update {
+                it.copy(errorMessage = "Nama maksimum 50 karakter")
+            }
+            return
+        }
+        if (!username.matches(usernameRegex)) {
+            _uiState.update {
+                it.copy(errorMessage = "Nama hanya boleh huruf, angka, dan spasi")
+            }
+        }
+        val emailRegex = "^[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.com$".toRegex()
+        if (email.length > 50) {
+            _uiState.update { it.copy(errorMessage = "Email maksimum 50 karakter") }
+            return
+        }
+        if (!email.matches(emailRegex)) {
+            _uiState.update { it.copy(errorMessage = "Format email salah (harus ada @ dan .com, tanpa simbol lain)") }
+            return
+        }
+        if (pass.length <= 6) {
+            _uiState.update { it.copy(errorMessage = "Password harus lebih dari 6 karakter") }
+            return
+        }
+        if (pass.length > 30) {
+            _uiState.update { it.copy(errorMessage = "Password maksimal 30 karakter") }
+            return
+        }
+
         viewModelScope.launch {
             _uiState.update {
                 it.copy(

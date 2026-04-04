@@ -375,8 +375,8 @@ fun PromptDetailScreen(
                     model = data.imageUrl,
                     contentDescription = data.title,
                     contentScale = ContentScale.Crop,
-                    placeholder = painterResource(R.drawable.ic_image),
-                    error = painterResource(R.drawable.ic_image),
+                    placeholder = painterResource(R.drawable.ic_default_image),
+                    error = painterResource(R.drawable.ic_default_image),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)

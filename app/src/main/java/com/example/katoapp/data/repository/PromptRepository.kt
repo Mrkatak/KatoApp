@@ -67,7 +67,7 @@ class PromptRepository @Inject constructor(
         imageUri: Uri?, isSharing: Boolean
     ) {
         withContext(Dispatchers.IO) {
-            val currentUser = auth.currentUser ?: throw Exception("User belum login")
+            val currentUser = auth.currentUser ?: throw Exception("UID Null")
             //upload gambar
             var finalImageUrl = ""
             if (imageUri != null) {
@@ -495,8 +495,8 @@ class PromptRepository @Inject constructor(
                 val uid = auth.currentUser?.uid ?: throw Exception("User belum login")
                 val savedRef = firestore.collection("pengguna")
                     .document(uid)
-                    .collection("SavedPrompt") // Collection Khusus Bookmark
-                    .document(prompt.id) // Pakai ID yang sama dengan aslinya
+                    .collection("SavedPrompt")
+                    .document(prompt.id)
 
                 val snapshot = savedRef.get().await()
                 if (snapshot.exists()) {
@@ -907,7 +907,6 @@ class PromptRepository @Inject constructor(
         }
         val originalId = doc.getString("id") ?: doc.getString("PromptId") ?: doc.id
         return Prompt(
-//            id = doc.id,
             id = originalId,
             title = getField("Judul"),
             imageUrl = getField("LinkGambar"),
@@ -918,7 +917,6 @@ class PromptRepository @Inject constructor(
             content = getField("Prompt"),
             rating = getField("Rating").ifEmpty { "New" },
             status = getField("Status"),
-//            createdAt = doc.getDate("Tanggal"),
             createdAt = doc.getDate("Tanggal") ?: doc.getDate("TanggalLaporan"),
             usageCount = doc.getLong("UsageCount")?.toInt() ?: 0,
             userId = getField("UserId"),

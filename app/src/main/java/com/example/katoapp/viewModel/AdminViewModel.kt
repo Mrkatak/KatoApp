@@ -2,11 +2,9 @@ package com.example.katoapp.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.katoapp.data.repository.AuthRepository
 import com.example.katoapp.data.repository.PromptRepository
 import com.example.katoapp.viewModel.state.AdminTab
 import com.example.katoapp.viewModel.state.AdminUiState
-import com.example.katoapp.viewModel.state.AuthUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,22 +24,6 @@ class AdminViewModel @Inject constructor(
         fetchMainCats()
         changeTab(AdminTab.REPORT)
     }
-
-//    private fun fetchMainCats() {
-//        viewModelScope.launch {
-//            _uiState.update { it.copy(isLoading = true) }
-//            val mainCats = repository.getMainCategories()
-//            val defaultMainCat = if (mainCats.isNotEmpty()) mainCats[0] else ""
-//
-//            _uiState.update {
-//                it.copy(
-//                    isLoading = false,
-//                    categories = mainCats,
-//                    selectedMainCategory = defaultMainCat
-//                )
-//            }
-//        }
-//    }
 
     private fun fetchMainCats() {
         viewModelScope.launch {
@@ -75,19 +57,15 @@ class AdminViewModel @Inject constructor(
         }
     }
 
-    // --- LOGIC FILTER KATEGORI ---
+    //filter kategori
     fun selectMainCategory(category: String) {
         _uiState.update { currentState ->
-            // Toggle Logic: Jika diklik lagi, jadi kosong (unselect)
             val newCategory = if (currentState.selectedMainCategory == category) "" else category
-
-            // Lakukan Filtering Lokal dari rawPrompts
             val filteredList = if (newCategory.isEmpty()) {
-                currentState.rawPrompts // Tampilkan semua jika tidak ada kategori
+                currentState.rawPrompts
             } else {
                 currentState.rawPrompts.filter { it.category == newCategory }
             }
-
             currentState.copy(
                 selectedMainCategory = newCategory,
                 prompts = filteredList

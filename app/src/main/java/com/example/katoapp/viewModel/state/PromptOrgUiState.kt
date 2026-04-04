@@ -10,6 +10,7 @@ data class PromptOrgUiState(
     val generalCategories: List<String> = emptyList() ,
     val selectedGeneralCategories: List<String> = emptyList() ,
     val errorMessage: String? = null ,
+    val errorMessageLoad: String? = null,
     val isSuccess: Boolean = false ,
     val promptData: Prompt? = null ,
 )

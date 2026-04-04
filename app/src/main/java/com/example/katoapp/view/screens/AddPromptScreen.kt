@@ -1,6 +1,7 @@
 package com.example.katoapp.view.screens
 
 import android.net.Uri
+import android.widget.Space
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -28,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -62,6 +64,11 @@ fun AddPromptRoute(
         }
     }
 
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     AddPromptScreen(
         onBackClick = { navController.popBackStack() },
@@ -110,7 +117,9 @@ fun AddPromptScreen(
 ) {
     // State Lokal Form
     var title by remember { mutableStateOf("") }
+    var isTitleNull by remember { mutableStateOf(false)}
     var promptContent by remember { mutableStateOf("") }
+    var isContentNull by remember { mutableStateOf(false) }
     var aiModel by remember { mutableStateOf("") }
     var modelVersion by remember { mutableStateOf("") }
 //    var generalCategory by remember { mutableStateOf("") }
@@ -120,6 +129,7 @@ fun AddPromptScreen(
         mutableStateOf(if (categories.isNotEmpty()) categories[0] else "")
     }
     var isSharing by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -160,7 +170,23 @@ fun AddPromptScreen(
             InputSection(title = "Judul") {
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = { newValue ->
+                        if (newValue.length <= 50) {
+                            title = newValue
+                            isTitleNull = false
+                        } else {
+                            title = newValue.take(50)
+                            isTitleNull = false
+
+                            if (newValue.length - title.length == 1) {
+                                Toast.makeText(context, "Judul maksimum 50 karakter", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Judul terlalu panjang", Toast.LENGTH_SHORT).show()
+                            }
+
+                        }
+
+                    },
                     placeholder = {
                         Text(
                             text = "Masukkan Judul",
@@ -173,6 +199,27 @@ fun AddPromptScreen(
                         .padding(horizontal = 26.dp),
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true,
+                    isError = isTitleNull,
+                    supportingText = {
+                        Row(
+                            modifier
+                                .fillMaxWidth()
+                        ) {
+                            if (isTitleNull) {
+                                Text("Judul tidak boleh kosong")
+                            } else {
+                                Spacer(modifier.weight(1f))
+                            }
+
+                            if (title.isNotEmpty()) {
+                                Text(
+                                    text = "${title.length}/50",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences
                     )
@@ -183,7 +230,21 @@ fun AddPromptScreen(
             InputSection(title = "Isi Prompt") {
                 OutlinedTextField(
                     value = promptContent,
-                    onValueChange = { promptContent = it },
+                    onValueChange = { newValue ->
+                        if (newValue.length <= 1000) {
+                            promptContent = newValue
+                            isContentNull = false
+                        } else {
+                            promptContent = newValue.take(1000)
+                            isContentNull = false
+
+                            if (newValue.length - promptContent.length == 1) {
+                                Toast.makeText(context, "Prompt maksimum 1000 karakter", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Prompt terlalu panjang", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
                     placeholder = {
                         Text(
                             text = "Masukkan isi prompt...",
@@ -196,6 +257,26 @@ fun AddPromptScreen(
                         .padding(horizontal = 26.dp)
                         .height(112.dp),
                     shape = RoundedCornerShape(12.dp),
+                    isError = isContentNull,
+                    supportingText = {
+                        Row(
+                            modifier.fillMaxWidth()
+                        ) {
+                            if (isContentNull) {
+                                Text("Prompt tidak boleh kosong")
+                            } else {
+                                Spacer(modifier.weight(1f))
+                            }
+
+                            if (promptContent.isNotEmpty()) {
+                                Text(
+                                    text = "${promptContent.length}/1000",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+                        }
+                    },
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences
                     ),
@@ -245,7 +326,19 @@ fun AddPromptScreen(
                     InputSection("Model AI") {
                         OutlinedTextField(
                             value = aiModel,
-                            onValueChange = { aiModel = it },
+                            onValueChange = { newValue ->
+                                if (newValue.length <= 50) {
+                                    aiModel = newValue
+                                } else {
+                                    aiModel = newValue.take(50)
+
+                                    if (newValue.length - aiModel.length == 1){
+                                        Toast.makeText(context, "Model AI maksimum 50 karakter", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, "Model AI terlalu panjang", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            },
                             placeholder = {
                                 Text(
                                     text = "Gemini...",
@@ -258,6 +351,21 @@ fun AddPromptScreen(
                                 .padding(start = 26.dp),
                             shape = RoundedCornerShape(12.dp),
                             singleLine = true,
+                            supportingText = {
+                                if (aiModel.isNotEmpty()) {
+                                    Row(
+                                        modifier
+                                            .fillMaxWidth()
+                                    ) {
+                                        Spacer(modifier.weight(1f))
+                                        Text(
+                                            text = "${aiModel.length}/50",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.secondary
+                                        )
+                                    }
+                                }
+                            },
                             maxLines = 1,
                             keyboardOptions = KeyboardOptions(
                                 capitalization = KeyboardCapitalization.Sentences
@@ -278,7 +386,19 @@ fun AddPromptScreen(
                     )
                     OutlinedTextField(
                         value = modelVersion,
-                        onValueChange = { modelVersion = it },
+                        onValueChange = { newValue ->
+                            if (newValue.length <= 50) {
+                                modelVersion = newValue
+                            } else {
+                                modelVersion = newValue.take(50)
+
+                                if (newValue.length - modelVersion.length == 1) {
+                                    Toast.makeText(context, "Versi AI maksimum 50 karakter", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    Toast.makeText(context, "Versi AI terlalu panjang", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        },
                         placeholder = {
                             Text(
                                 text = "2.5....",
@@ -291,6 +411,21 @@ fun AddPromptScreen(
                             .padding(end = 26.dp),
                         shape = RoundedCornerShape(12.dp),
                         singleLine = true,
+                        supportingText = {
+                            if (modelVersion.isNotEmpty()) {
+                                Row(
+                                    modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    Spacer(modifier.weight(1f))
+                                    Text(
+                                        text = "${modelVersion.length}/50",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+                            }
+                        },
                         maxLines = 1,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Sentences
@@ -332,8 +467,8 @@ fun AddPromptScreen(
                         .height(200.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .padding(horizontal = 26.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f))
+                        .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(12.dp))
                         .clickable { onImageClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -342,7 +477,9 @@ fun AddPromptScreen(
                             model = selectedImageUri,
                             contentDescription = "Preview Gambar",
                             contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(12.dp))
                         )
                     } else {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -393,7 +530,9 @@ fun AddPromptScreen(
                 //Button Simpan
                 Button(
                     onClick = {
-                        if (title.isNotEmpty() && promptContent.isNotEmpty()) {
+                        isTitleNull = title.isBlank()
+                        isContentNull = promptContent.isBlank()
+                        if (!isTitleNull && !isContentNull) {
                             onSaveClick(
                                 title,
                                 promptContent,
@@ -412,18 +551,12 @@ fun AddPromptScreen(
                     enabled = !isLoading,
                     elevation = ButtonDefaults.elevatedButtonElevation(2.dp)
                 ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    } else {
-                        Text(
-                            text = "Simpan",
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
+
+                    Text(
+                        text = "Simpan",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
