@@ -118,6 +118,7 @@ class AuthViewModel @Inject constructor(
             _uiState.update {
                 it.copy(errorMessage = "Nama hanya boleh huruf, angka, dan spasi")
             }
+            return
         }
         val emailRegex = "^[a-zA-Z0-9]+@[a-zA-Z0-9]+\\.com$".toRegex()
         if (email.length > 50) {
